@@ -1,27 +1,135 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Shadcn UI variables — HSL format */
+    --background: 150 30% 98%;
+    --foreground: 160 20% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 20% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 20% 10%;
+    /* Deep Emerald Primary */
+    --primary: 158 88% 18%;
+    --primary-foreground: 0 0% 98%;
+    /* Gold Secondary */
+    --secondary: 43 96% 56%;
+    --secondary-foreground: 35 60% 20%;
+    --muted: 150 20% 96%;
+    --muted-foreground: 155 10% 45%;
+    --accent: 43 96% 56%;
+    --accent-foreground: 35 60% 20%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 150 20% 88%;
+    --input: 150 15% 93%;
+    --ring: 158 60% 40%;
+    --radius: 0.75rem;
+    /* Charts */
+    --chart-1: 158 60% 35%;
+    --chart-2: 43 96% 56%;
+    --chart-3: 220 60% 55%;
+    --chart-4: 25 80% 55%;
+    --chart-5: 280 50% 55%;
+    /* Sidebar */
+    --sidebar-background: 158 88% 14%;
+    --sidebar-foreground: 150 30% 92%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 35 60% 20%;
+    --sidebar-accent: 158 70% 20%;
+    --sidebar-accent-foreground: 150 30% 92%;
+    --sidebar-border: 158 50% 22%;
+    --sidebar-ring: 158 60% 40%;
   }
-}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  .dark {
+    --background: 158 30% 8%;
+    --foreground: 150 20% 95%;
+    --card: 158 25% 12%;
+    --card-foreground: 150 20% 95%;
+    --popover: 158 25% 12%;
+    --popover-foreground: 150 20% 95%;
+    --primary: 43 96% 56%;
+    --primary-foreground: 35 60% 15%;
+    --secondary: 158 40% 20%;
+    --secondary-foreground: 150 20% 95%;
+    --muted: 158 20% 18%;
+    --muted-foreground: 150 10% 60%;
+    --accent: 43 80% 45%;
+    --accent-foreground: 35 60% 15%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 158 20% 22%;
+    --input: 158 20% 18%;
+    --ring: 158 60% 40%;
+    --sidebar-background: 158 88% 8%;
+    --sidebar-foreground: 150 30% 90%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 35 60% 15%;
+    --sidebar-accent: 158 50% 14%;
+    --sidebar-accent-foreground: 150 30% 90%;
+    --sidebar-border: 158 30% 15%;
+    --sidebar-ring: 158 60% 40%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', sans-serif;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/* ── Custom Component Classes ───────────────────────────────────────────────── */
+@layer components {
+  .btn-emerald {
+    @apply bg-emerald-900 text-white font-semibold px-6 py-3 rounded-xl shadow-lg
+           hover:bg-emerald-800 active:bg-emerald-950 transition-all duration-200
+           hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  .btn-gold {
+    @apply bg-gold-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg
+           hover:bg-gold-500 active:bg-gold-700 transition-all duration-200
+           hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  .card-glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/40 shadow-xl rounded-2xl;
+  }
+
+  .stat-card {
+    @apply bg-white rounded-2xl p-6 shadow-sm border
+           hover:shadow-md transition-all duration-200;
+  }
+
+  .gradient-emerald {
+    background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  }
+
+  .gradient-header {
+    background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #065f46 100%);
+  }
+
+  .success-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    background: rgba(6, 78, 59, 0.85);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.2s ease-in-out;
   }
 }
