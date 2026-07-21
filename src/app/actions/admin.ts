@@ -1,21 +1,22 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 
 export async function getDashboardStats(date: string) {
-  const supabase = createClient()
+  const admin = createAdminClient()
 
-  const { data: profiles } = await supabase
+  const { data: profiles } = await admin
     .from('profiles')
     .select('id')
     .eq('role', 'guru')
 
   const totalGuru = profiles?.length ?? 0
 
-  const { data: attendances } = await supabase
+  const { data: attendances } = await admin
     .from('attendances')
     .select('*')
     .eq('tanggal', date)
@@ -30,14 +31,14 @@ export async function getDashboardStats(date: string) {
 }
 
 export async function getTodayAttendanceList(date: string) {
-  const supabase = createClient()
+  const admin = createAdminClient()
 
-  const { data: profiles } = await supabase
+  const { data: profiles } = await admin
     .from('profiles')
     .select('id, nama, nip')
     .eq('role', 'guru')
 
-  const { data: attendances } = await supabase
+  const { data: attendances } = await admin
     .from('attendances')
     .select('*')
     .eq('tanggal', date)
@@ -54,8 +55,8 @@ export async function getTodayAttendanceList(date: string) {
 // ── GURU CRUD ─────────────────────────────────────────────────────────────────
 
 export async function getAllGuru() {
-  const supabase = createClient()
-  const { data } = await supabase
+  const admin = createAdminClient()
+  const { data } = await admin
     .from('profiles')
     .select('*')
     .eq('role', 'guru')
@@ -69,11 +70,9 @@ export async function createGuru(formData: {
   email: string
   password: string
 }) {
-  const supabase = createClient()
+  const admin = createAdminClient()
 
-  // Create auth user via admin API (needs service role key in real deploy)
-  // For now we use regular signUp
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+  const { data: authData, error: authError } = await admin.auth.admin.createUser({
     email: formData.email,
     password: formData.password,
     email_confirm: true,
@@ -82,7 +81,7 @@ export async function createGuru(formData: {
 
   if (authError) return { success: false, error: authError.message }
 
-  const { error: profileError } = await supabase.from('profiles').insert({
+  const { error: profileError } = await admin.from('profiles').insert({
     id: authData.user.id,
     nama: formData.nama,
     nip: formData.nip,
@@ -96,8 +95,8 @@ export async function createGuru(formData: {
 }
 
 export async function updateGuru(id: string, formData: { nama: string; nip: string }) {
-  const supabase = createClient()
-  const { error } = await supabase
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('profiles')
     .update({ nama: formData.nama, nip: formData.nip })
     .eq('id', id)
@@ -108,8 +107,8 @@ export async function updateGuru(id: string, formData: { nama: string; nip: stri
 }
 
 export async function deleteGuru(id: string) {
-  const supabase = createClient()
-  const { error } = await supabase.auth.admin.deleteUser(id)
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.deleteUser(id)
   if (error) return { success: false, error: error.message }
   revalidatePath('/admin/guru')
   return { success: true }
@@ -123,9 +122,9 @@ export async function inputManualAttendance(data: {
   statusKehadiran: 'Izin' | 'Sakit' | 'Alpha'
   keterangan?: string
 }) {
-  const supabase = createClient()
+  const admin = createAdminClient()
 
-  const { error } = await supabase
+  const { error } = await admin
     .from('attendances')
     .upsert({
       user_id: data.userId,
@@ -146,9 +145,9 @@ export async function getAttendanceReport(
   endDate: string,
   userId?: string
 ) {
-  const supabase = createClient()
+  const admin = createAdminClient()
 
-  let query = supabase
+  let query = admin
     .from('attendances')
     .select('*, profiles(nama, nip)')
     .gte('tanggal', startDate)
@@ -166,14 +165,14 @@ export async function getAttendanceReport(
 // ── SCHOOL SETTINGS ────────────────────────────────────────────────────────────
 
 export async function getSchoolSettings() {
-  const supabase = createClient()
-  const { data } = await supabase.from('school_settings').select('*').eq('id', 1).single()
+  const admin = createAdminClient()
+  const { data } = await admin.from('school_settings').select('*').eq('id', 1).single()
   return data
 }
 
 export async function resetQrToken(newToken: string) {
-  const supabase = createClient()
-  const { error } = await supabase
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('school_settings')
     .update({ qr_secret_token: newToken })
     .eq('id', 1)

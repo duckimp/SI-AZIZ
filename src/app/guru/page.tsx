@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import GuruDashboard from '@/components/guru/GuruDashboard'
 
@@ -12,24 +13,23 @@ export default async function GuruPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const admin = createAdminClient()
+  const { data: profile } = await admin
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
 
   if (!profile) redirect('/login')
-  // Jangan redirect admin dari sini — biarkan middleware yang handle
-  // Middleware sudah protect /admin, guru page tetap tampil untuk semua role yang valid
 
-  const { data: settings } = await supabase
+  const { data: settings } = await admin
     .from('school_settings')
     .select('*')
     .eq('id', 1)
     .single()
 
   const today = new Date().toLocaleDateString('en-CA')
-  const { data: todayAttendance } = await supabase
+  const { data: todayAttendance } = await admin
     .from('attendances')
     .select('*')
     .eq('user_id', user.id)
