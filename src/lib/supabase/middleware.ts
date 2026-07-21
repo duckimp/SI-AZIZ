@@ -63,20 +63,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Validate admin access
-  if (isAdminPage && user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.role !== 'admin') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/guru'
-      return NextResponse.redirect(url)
-    }
-  }
+  // Validate admin access — delegated to page-level check using admin client
+  // Middleware cannot use service role key in Edge Runtime
 
   // IMPORTANT: return supabaseResponse to ensure cookies are properly forwarded
   return supabaseResponse
