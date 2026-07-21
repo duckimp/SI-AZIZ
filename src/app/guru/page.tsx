@@ -19,7 +19,8 @@ export default async function GuruPage() {
     .single()
 
   if (!profile) redirect('/login')
-  if (profile.role === 'admin') redirect('/admin')
+  // Jangan redirect admin dari sini — biarkan middleware yang handle
+  // Middleware sudah protect /admin, guru page tetap tampil untuk semua role yang valid
 
   const { data: settings } = await supabase
     .from('school_settings')
