@@ -47,7 +47,7 @@ export default function LoginForm() {
           id="email"
           name="email"
           type="email"
-          placeholder="guru@minuraziz.sch.id"
+          placeholder="contoh@gmail.com"
           required
           className="h-12 border-emerald-200 focus:border-emerald-600 focus:ring-emerald-600/20 rounded-xl"
         />
