@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { SchoolSettings } from '@/lib/types'
-import { resetQrToken } from '@/app/actions/admin'
+import { resetQrToken, updateJamSettings } from '@/app/actions/admin'
 import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Printer, ShieldCheck, AlertTriangle, Loader2, Copy, Check } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { RefreshCw, Printer, ShieldCheck, AlertTriangle, Loader2, Copy, Check, Clock } from 'lucide-react'
 
 interface Props {
   settings: SchoolSettings | null
@@ -14,13 +16,28 @@ interface Props {
 export default function QrManagement({ settings: initialSettings }: Props) {
   const [settings, setSettings] = useState<SchoolSettings | null>(initialSettings)
   const [isResetting, setIsResetting] = useState(false)
+  const [isSavingJam, setIsSavingJam] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [copied, setCopied] = useState(false)
+  const [jamMasuk, setJamMasuk] = useState(initialSettings?.jam_masuk?.slice(0, 5) ?? '07:00')
+  const [jamPulang, setJamPulang] = useState(initialSettings?.jam_pulang?.slice(0, 5) ?? '14:00')
 
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text })
     setTimeout(() => setMessage(null), 3000)
+  }
+
+  async function handleSaveJam() {
+    setIsSavingJam(true)
+    const result = await updateJamSettings(jamMasuk + ':00', jamPulang + ':00')
+    if (result.success && settings) {
+      setSettings({ ...settings, jam_masuk: jamMasuk + ':00', jam_pulang: jamPulang + ':00' })
+      showMessage('success', 'Jam masuk & pulang berhasil diperbarui!')
+    } else {
+      showMessage('error', result.error ?? 'Gagal menyimpan pengaturan jam.')
+    }
+    setIsSavingJam(false)
   }
 
   async function handleResetToken() {
@@ -160,6 +177,46 @@ export default function QrManagement({ settings: initialSettings }: Props) {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Jam Settings Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock size={18} className="text-emerald-600" />
+            <h3 className="font-bold text-gray-900">Atur Jam Masuk & Pulang</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="space-y-2">
+              <Label htmlFor="jam-masuk" className="text-sm font-semibold text-gray-700">Jam Masuk</Label>
+              <Input
+                id="jam-masuk"
+                type="time"
+                value={jamMasuk}
+                onChange={e => setJamMasuk(e.target.value)}
+                className="h-11 rounded-xl border-gray-200"
+              />
+              <p className="text-xs text-gray-400">Guru terlambat jika scan setelah jam ini</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jam-pulang" className="text-sm font-semibold text-gray-700">Jam Pulang</Label>
+              <Input
+                id="jam-pulang"
+                type="time"
+                value={jamPulang}
+                onChange={e => setJamPulang(e.target.value)}
+                className="h-11 rounded-xl border-gray-200"
+              />
+              <p className="text-xs text-gray-400">Referensi jam pulang guru</p>
+            </div>
+          </div>
+          <Button
+            onClick={handleSaveJam}
+            disabled={isSavingJam}
+            className="w-full flex items-center justify-center gap-2 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl h-11"
+          >
+            {isSavingJam ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} />}
+            {isSavingJam ? 'Menyimpan...' : 'Simpan Pengaturan Jam'}
+          </Button>
         </div>
       </div>
 

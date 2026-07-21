@@ -180,3 +180,15 @@ export async function resetQrToken(newToken: string) {
   revalidatePath('/admin/qr')
   return { success: true }
 }
+
+export async function updateJamSettings(jamMasuk: string, jamPulang: string) {
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('school_settings')
+    .update({ jam_masuk: jamMasuk, jam_pulang: jamPulang })
+    .eq('id', 1)
+
+  if (error) return { success: false, error: error.message }
+  revalidatePath('/admin/qr')
+  return { success: true }
+}
