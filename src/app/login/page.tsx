@@ -7,7 +7,7 @@ export const metadata = {
 
 export default async function LoginPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center gradient-header px-4 py-8">
+    <main className="min-h-screen w-screen flex items-center justify-center gradient-header px-4 py-8 relative overflow-hidden">
       {/* Decorative circles */}
       <div className="absolute top-0 left-0 w-72 h-72 bg-gold-600/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
@@ -28,7 +28,7 @@ export default async function LoginPage() {
         </div>
 
         <p className="text-center text-emerald-300/60 text-xs mt-6">
-          © {new Date().getFullYear()} MI Nur Aziz • Powered by Si-Aziz
+          © {new Date().getFullYear()} MI Nur Aziz • Powered by Andi Mariono
         </p>
       </div>
     </main>
