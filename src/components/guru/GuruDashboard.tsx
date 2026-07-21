@@ -208,8 +208,8 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
             ) : (
               <>
                 <Scan size={24} />
-                {getScanButtonLabel()}
-                <ChevronRight size={20} className="ml-auto" />
+                <span className="flex-1 text-center">{getScanButtonLabel()}</span>
+                <ChevronRight size={20} />
               </>
             )}
           </button>
