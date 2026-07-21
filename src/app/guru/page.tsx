@@ -21,7 +21,8 @@ export default async function GuruPage() {
     .single()
 
   if (!profile) redirect('/login')
-  if (profile.role === 'admin') redirect('/admin')
+  // Admin yang akses /guru dibiarkan — tidak redirect ke /admin
+  // untuk mencegah loop. Admin bisa akses /admin langsung.
 
   const { data: settings } = await admin
     .from('school_settings')

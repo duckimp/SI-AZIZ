@@ -42,12 +42,11 @@ export async function updateSession(request: NextRequest) {
   const isProtected = isAdminPage || isGuruPage
   const isRoot = pathname === '/'
 
-  // Redirect logged-in user away from login page
+  // Redirect logged-in user away from login page — always to /guru
+  // Role-based redirect is handled by LoginForm (client-side) and page-level checks
   if (isLoginPage && user) {
     const url = request.nextUrl.clone()
-    // Cek role dari user metadata (disimpan saat sync trigger di Supabase)
-    const role = user.user_metadata?.role as string | undefined
-    url.pathname = role === 'admin' ? '/admin' : '/guru'
+    url.pathname = '/guru'
     return NextResponse.redirect(url)
   }
 
