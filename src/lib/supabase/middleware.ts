@@ -1,9 +1,9 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
-    request: { headers: request.headers },
+  let supabaseResponse = NextResponse.next({
+    request,
   })
 
   const supabase = createServerClient(
@@ -11,82 +11,73 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          request.cookies.set({ name, value, ...options } as any)
-          response = NextResponse.next({ request: { headers: request.headers } })
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          response.cookies.set({ name, value, ...options } as any)
-        },
-        remove(name: string, options: CookieOptions) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          request.cookies.set({ name, value: '', ...options } as any)
-          response = NextResponse.next({ request: { headers: request.headers } })
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          response.cookies.set({ name, value: '', ...options } as any)
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
         },
       },
     }
   )
 
+  // IMPORTANT: Do not add logic between createServerClient and supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   const pathname = request.nextUrl.pathname
 
-  // Selalu izinkan static assets & login page tanpa auth check
   const isLoginPage = pathname === '/login'
   const isAdminPage = pathname.startsWith('/admin')
   const isGuruPage = pathname.startsWith('/guru')
   const isProtected = isAdminPage || isGuruPage
+  const isRoot = pathname === '/'
 
-  // Refresh session - tapi jangan redirect dari sini kalau di halaman login
-  // untuk menghindari loop
-  let user = null
-  try {
-    const { data } = await supabase.auth.getUser()
-    user = data.user
-  } catch {
-    // Kalau gagal ambil user, anggap tidak ada session
-    user = null
-  }
-
-  // Kalau di login page dan sudah ada user yang valid → redirect ke dashboard
-  // Tapi HANYA kalau ini bukan akibat redirect loop (cek referer)
+  // Redirect logged-in user away from login page
   if (isLoginPage && user) {
-    return NextResponse.redirect(new URL('/guru', request.url))
+    const url = request.nextUrl.clone()
+    url.pathname = '/guru'
+    return NextResponse.redirect(url)
   }
 
-  // Kalau akses halaman protected tapi tidak ada user → ke login
-  if (isProtected && !user) {
-    const loginUrl = new URL('/login', request.url)
-    return NextResponse.redirect(loginUrl)
+  // Redirect unauthenticated user to login
+  if ((isProtected || isRoot) && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
   }
 
-  // Kalau akses root '/' → redirect sesuai role
-  if (pathname === '/') {
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-    return NextResponse.redirect(new URL('/guru', request.url))
+  // Redirect root to guru dashboard
+  if (isRoot && user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/guru'
+    return NextResponse.redirect(url)
   }
 
-  // Kalau admin page, validasi role
+  // Validate admin access
   if (isAdminPage && user) {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
 
-      if (!profile || profile.role !== 'admin') {
-        return NextResponse.redirect(new URL('/guru', request.url))
-      }
-    } catch {
-      return NextResponse.redirect(new URL('/guru', request.url))
+    if (!profile || profile.role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/guru'
+      return NextResponse.redirect(url)
     }
   }
 
-  return response
+  // IMPORTANT: return supabaseResponse to ensure cookies are properly forwarded
+  return supabaseResponse
 }
