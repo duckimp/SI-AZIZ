@@ -25,6 +25,16 @@ export async function scanAttendance(qrToken: string, distance: number) {
   const today = getTodayDate()
   const currentTime = getCurrentTime()
 
+  // Tentukan jam masuk & pulang berdasarkan hari ini
+  const dayOfWeek = new Date().getDay().toString() // '0'=Minggu, '1'=Senin, dst
+  const jadwal = settings.jadwal_harian?.[dayOfWeek]
+  const jamMasukHari = jadwal?.masuk ? jadwal.masuk + ':00' : settings.jam_masuk
+  const isLibur = jadwal?.libur ?? false
+
+  if (isLibur) {
+    return { success: false, message: 'Hari ini adalah hari libur.' }
+  }
+
   // Check existing attendance for today
   const { data: existing } = await supabase
     .from('attendances')
@@ -61,7 +71,7 @@ export async function scanAttendance(qrToken: string, distance: number) {
   }
 
   // Record masuk
-  const status = getAttendanceStatus(currentTime, settings.jam_masuk)
+  const status = getAttendanceStatus(currentTime, jamMasukHari)
   const { data: newAttendance, error } = await supabase
     .from('attendances')
     .insert({

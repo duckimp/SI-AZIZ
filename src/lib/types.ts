@@ -8,6 +8,12 @@ export interface Profile {
   created_at: string
 }
 
+export interface JadwalHari {
+  masuk: string
+  pulang: string
+  libur: boolean
+}
+
 export interface SchoolSettings {
   id: number
   nama_sekolah: string
@@ -15,8 +21,9 @@ export interface SchoolSettings {
   latitude: number
   longitude: number
   max_radius_meters: number
-  jam_masuk: string
-  jam_pulang: string
+  jam_masuk: string        // legacy fallback
+  jam_pulang: string       // legacy fallback
+  jadwal_harian: Record<string, JadwalHari> | null
 }
 
 export interface Attendance {

@@ -181,11 +181,11 @@ export async function resetQrToken(newToken: string) {
   return { success: true }
 }
 
-export async function updateJamSettings(jamMasuk: string, jamPulang: string) {
+export async function updateJadwalHarian(jadwal: Record<string, { masuk: string; pulang: string; libur: boolean }>) {
   const admin = createAdminClient()
   const { error } = await admin
     .from('school_settings')
-    .update({ jam_masuk: jamMasuk, jam_pulang: jamPulang })
+    .update({ jadwal_harian: jadwal })
     .eq('id', 1)
 
   if (error) return { success: false, error: error.message }
