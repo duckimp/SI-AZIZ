@@ -21,6 +21,7 @@ export default async function GuruPage() {
     .single()
 
   if (!profile) redirect('/login')
+  if (profile.role === 'admin') redirect('/admin')
 
   const { data: settings } = await admin
     .from('school_settings')

@@ -45,7 +45,9 @@ export async function updateSession(request: NextRequest) {
   // Redirect logged-in user away from login page
   if (isLoginPage && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/guru'
+    // Cek role dari user metadata (disimpan saat sync trigger di Supabase)
+    const role = user.user_metadata?.role as string | undefined
+    url.pathname = role === 'admin' ? '/admin' : '/guru'
     return NextResponse.redirect(url)
   }
 
