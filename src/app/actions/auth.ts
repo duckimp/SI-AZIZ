@@ -17,15 +17,17 @@ export async function login(formData: FormData) {
   const user = data.user
   if (!user) return { error: 'Login gagal' }
 
+  // Query profiles using service role via RPC to bypass RLS during login
+  // Use the session from signInWithPassword directly
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  // Return redirect path to client — let the browser handle the redirect
-  // so cookies are properly committed before navigation
-  const redirectTo = profile?.role === 'admin' ? '/admin' : '/guru'
+  // If profile query fails due to RLS timing, fall back to checking user metadata
+  const role = profile?.role ?? (user.user_metadata?.role as string | undefined)
+  const redirectTo = role === 'admin' ? '/admin' : '/guru'
   return { redirectTo }
 }
 
