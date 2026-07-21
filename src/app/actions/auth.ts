@@ -20,11 +20,18 @@ export async function login(formData: FormData) {
 
   // Pakai admin client untuk bypass RLS saat cek role
   const admin = createAdminClient()
-  const { data: profile } = await admin
+  const { data: profile, error: profileError } = await admin
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
+
+  console.log('[LOGIN DEBUG]', {
+    userId: user.id,
+    profileRole: profile?.role,
+    profileError: profileError?.message,
+    redirectTo: profile?.role === 'admin' ? '/admin' : '/guru'
+  })
 
   const role = profile?.role
   const redirectTo = role === 'admin' ? '/admin' : '/guru'
