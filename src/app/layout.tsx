@@ -40,7 +40,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Si-Aziz" />
       </head>
-      <body className={`${inter.className} antialiased font-sans`}>
+      <body className={`${inter.className} antialiased font-sans overflow-x-hidden`}>
         {children}
       </body>
     </html>
