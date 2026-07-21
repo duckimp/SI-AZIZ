@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { Camera, X } from 'lucide-react'
 
@@ -11,12 +11,29 @@ interface Props {
 
 export default function QrScanner({ onScan, onClose }: Props) {
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const isStoppedRef = useRef(false)
   const [isStarting, setIsStarting] = useState(true)
   const [cameraError, setCameraError] = useState('')
   const divId = 'qr-reader-main'
 
+  const stopScanner = useCallback(async () => {
+    if (isStoppedRef.current) return
+    if (!scannerRef.current) return
+    try {
+      const state = scannerRef.current.getState()
+      // State 2 = SCANNING, State 3 = PAUSED
+      if (state === 2 || state === 3) {
+        isStoppedRef.current = true
+        await scannerRef.current.stop()
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
   useEffect(() => {
     let isMounted = true
+    isStoppedRef.current = false
 
     const startScanner = async () => {
       try {
@@ -27,8 +44,8 @@ export default function QrScanner({ onScan, onClose }: Props) {
           { facingMode: 'environment' },
           { fps: 10, qrbox: { width: 250, height: 250 } },
           async (decodedText) => {
-            if (!isMounted) return
-            await scanner.stop()
+            if (!isMounted || isStoppedRef.current) return
+            await stopScanner()
             onScan(decodedText)
           },
           undefined
@@ -47,15 +64,13 @@ export default function QrScanner({ onScan, onClose }: Props) {
 
     return () => {
       isMounted = false
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {})
-      }
+      stopScanner()
     }
-  }, [onScan])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="bg-black/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10">
-      {/* Header */}
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
           <Camera size={18} className="text-gold-400" />
@@ -66,7 +81,6 @@ export default function QrScanner({ onScan, onClose }: Props) {
         </button>
       </div>
 
-      {/* Scanner Viewport */}
       <div className="relative">
         {isStarting && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 rounded-b-2xl" style={{ minHeight: 300 }}>
@@ -85,7 +99,6 @@ export default function QrScanner({ onScan, onClose }: Props) {
         <div id={divId} className="w-full" style={{ minHeight: cameraError ? 0 : 300 }} />
       </div>
 
-      {/* Hint */}
       {!cameraError && (
         <p className="text-center text-white/50 text-xs py-3 px-4">
           Pastikan QR Code terlihat jelas di dalam kotak
