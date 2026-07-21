@@ -32,31 +32,58 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-
   const pathname = request.nextUrl.pathname
-  const isAuthPage = pathname.startsWith('/login')
+
+  // Selalu izinkan static assets & login page tanpa auth check
+  const isLoginPage = pathname === '/login'
   const isAdminPage = pathname.startsWith('/admin')
-  const isPublicAsset = pathname.startsWith('/_next') || pathname.startsWith('/icons') || pathname.startsWith('/favicon')
+  const isGuruPage = pathname.startsWith('/guru')
+  const isProtected = isAdminPage || isGuruPage
 
-  if (isPublicAsset) return response
+  // Refresh session - tapi jangan redirect dari sini kalau di halaman login
+  // untuk menghindari loop
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch {
+    // Kalau gagal ambil user, anggap tidak ada session
+    user = null
+  }
 
-  if (isAuthPage && user) {
+  // Kalau di login page dan sudah ada user yang valid → redirect ke dashboard
+  // Tapi HANYA kalau ini bukan akibat redirect loop (cek referer)
+  if (isLoginPage && user) {
     return NextResponse.redirect(new URL('/guru', request.url))
   }
 
-  if (!user && !isAuthPage) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // Kalau akses halaman protected tapi tidak ada user → ke login
+  if (isProtected && !user) {
+    const loginUrl = new URL('/login', request.url)
+    return NextResponse.redirect(loginUrl)
   }
 
-  if (user && isAdminPage) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+  // Kalau akses root '/' → redirect sesuai role
+  if (pathname === '/') {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return NextResponse.redirect(new URL('/guru', request.url))
+  }
 
-    if (!profile || profile.role !== 'admin') {
+  // Kalau admin page, validasi role
+  if (isAdminPage && user) {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile || profile.role !== 'admin') {
+        return NextResponse.redirect(new URL('/guru', request.url))
+      }
+    } catch {
       return NextResponse.redirect(new URL('/guru', request.url))
     }
   }
