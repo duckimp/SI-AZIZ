@@ -5,7 +5,7 @@ import { SchoolSettings, JadwalHari } from '@/lib/types'
 import { resetQrToken, updateJadwalHarian } from '@/app/actions/admin'
 import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Printer, ShieldCheck, AlertTriangle, Loader2, Copy, Check, Clock, Save } from 'lucide-react'
+import { RefreshCw, Printer, ShieldCheck, AlertTriangle, Loader2, Copy, Check, Clock, Save, Info } from 'lucide-react'
 
 interface Props {
   settings: SchoolSettings | null
@@ -251,7 +251,7 @@ export default function QrManagement({ settings: initialSettings }: Props) {
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-gray-400 mt-3">💡 Hari yang dicentang Libur tidak bisa diabsen oleh guru.</p>
+          <p className="text-xs text-gray-400 mt-3 flex items-center gap-1.5"><Info size={12} /> Hari yang dicentang Libur tidak bisa diabsen oleh guru.</p>
         </div>
       </div>
 

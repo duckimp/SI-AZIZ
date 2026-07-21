@@ -25,6 +25,7 @@ export default function GuruManagement({ guruList: initialList }: Props) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedGuru, setSelectedGuru] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [manualStatus, setManualStatus] = useState<'Izin' | 'Sakit' | 'Alpha'>('Izin')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -94,7 +95,7 @@ export default function GuruManagement({ guruList: initialList }: Props) {
     const result = await inputManualAttendance({
       userId: selectedGuru.id,
       tanggal: fd.get('tanggal') as string,
-      statusKehadiran: fd.get('status') as 'Izin' | 'Sakit' | 'Alpha',
+      statusKehadiran: manualStatus,
       keterangan: fd.get('keterangan') as string,
     })
     setIsLoading(false)
@@ -279,7 +280,7 @@ export default function GuruManagement({ guruList: initialList }: Props) {
             </div>
             <div className="space-y-1">
               <Label>Status Kehadiran</Label>
-              <Select name="status" defaultValue="Izin">
+              <Select value={manualStatus} onValueChange={(v) => setManualStatus(v as 'Izin' | 'Sakit' | 'Alpha')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Izin">Izin</SelectItem>

@@ -75,17 +75,18 @@ export async function createGuru(formData: {
     email: formData.email,
     password: formData.password,
     email_confirm: true,
-    user_metadata: { nama: formData.nama, nip: formData.nip },
+    user_metadata: { nama: formData.nama, nip: formData.nip, role: 'guru' },
   })
 
   if (authError) return { success: false, error: authError.message }
 
-  const { error: profileError } = await admin.from('profiles').insert({
+  // Upsert profile — override trigger yang mungkin sudah insert duluan tanpa NIP
+  const { error: profileError } = await admin.from('profiles').upsert({
     id: authData.user.id,
     nama: formData.nama,
-    nip: formData.nip,
+    nip: formData.nip || null,
     role: 'guru',
-  })
+  }, { onConflict: 'id' })
 
   if (profileError) return { success: false, error: profileError.message }
 
