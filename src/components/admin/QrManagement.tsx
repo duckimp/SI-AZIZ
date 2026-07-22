@@ -79,7 +79,57 @@ export default function QrManagement({ settings: initialSettings }: Props) {
     setIsResetting(false)
   }
 
-  function handleCopyToken() {
+  function handlePrint() {
+    if (!settings) return
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
+    // Render QR as SVG string
+    const svgEl = document.querySelector('#qr-preview-svg svg') as SVGElement
+    const svgString = svgEl ? svgEl.outerHTML : ''
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>QR Absensi - MI Nur Aziz</title>
+        <style>
+          body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: white; font-family: sans-serif; }
+          .frame { border: 8px solid #064E3B; border-radius: 24px; padding: 40px; max-width: 500px; width: 100%; box-shadow: 0 0 0 4px #D97706; }
+          .header { background: linear-gradient(135deg, #022c22, #064e3b); border-radius: 16px; padding: 16px 24px; margin-bottom: 16px; text-align: center; }
+          .school-name { color: #D97706; font-weight: 900; font-size: 28px; margin: 0; letter-spacing: 2px; }
+          .school-sub { color: #a7f3d0; font-size: 12px; margin: 4px 0 0; letter-spacing: 1px; }
+          .qr-wrap { display: flex; justify-content: center; margin-bottom: 24px; }
+          .qr-outer { background: #064E3B; border-radius: 20px; padding: 20px; }
+          .qr-inner { background: #fff; border-radius: 12px; padding: 12px; }
+          .footer { background: #f0fdf4; border-radius: 12px; padding: 12px 20px; border: 1px solid #bbf7d0; text-align: center; }
+          @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        </style>
+      </head>
+      <body>
+        <div class="frame">
+          <div class="header">
+            <p class="school-name">MI NUR AZIZ</p>
+            <p class="school-sub">ABSENSI DIGITAL SI-AZIZ</p>
+          </div>
+          <p style="text-align:center; color:#064E3B; font-size:14px; font-weight:700; margin:0 0 4px">Scan QR Code untuk Absensi</p>
+          <p style="text-align:center; color:#6b7280; font-size:11px; margin:0 0 20px">Pastikan GPS aktif & dalam radius ${settings.max_radius_meters ?? 50}m</p>
+          <div class="qr-wrap">
+            <div class="qr-outer">
+              <div class="qr-inner">${svgString}</div>
+            </div>
+          </div>
+          <div class="footer">
+            <p style="color:#064E3B; font-size:13px; font-weight:700; margin:0">Jam Masuk: ${jadwal['1']?.masuk ?? '07:00'} WIB</p>
+            <p style="color:#6b7280; font-size:11px; margin:4px 0 0">Terlambat jika scan setelah jam masuk yang telah ditentukan</p>
+          </div>
+        </div>
+        <script>setTimeout(() => { window.print(); window.close(); }, 500)</script>
+      </body>
+      </html>
+    `)
+    printWindow.document.close()
+  }
     if (settings) {
       navigator.clipboard.writeText(settings.qr_secret_token)
       setCopied(true)
@@ -98,14 +148,7 @@ export default function QrManagement({ settings: initialSettings }: Props) {
 
   return (
     <>
-      <style>{`
-        @media print {
-          body > * { display: none !important; }
-          #qr-print-area { display: flex !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
-        }
-      `}</style>
-
-      <div className="space-y-6 print:hidden">
+      <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-black text-gray-900">Kelola QR Code Absensi</h2>
           <p className="text-gray-500 text-sm mt-1">Generate QR Code dan atur jadwal jam per hari</p>
@@ -123,14 +166,14 @@ export default function QrManagement({ settings: initialSettings }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
             <h3 className="font-bold text-gray-900 mb-4">Preview QR Code</h3>
-            <div className="bg-emerald-950 p-6 rounded-2xl shadow-inner mb-4">
+            <div id="qr-preview-svg" className="bg-emerald-950 p-6 rounded-2xl shadow-inner mb-4">
               <div className="bg-white p-4 rounded-xl">
                 <QRCodeSVG value={settings.qr_secret_token} size={220} level="H" includeMargin={false} fgColor="#064E3B" />
               </div>
             </div>
             <p className="text-xs text-gray-500 text-center mb-4">Scan QR ini untuk absen masuk & pulang</p>
             <div className="flex gap-3 w-full">
-              <Button onClick={() => window.print()} className="flex-1 flex items-center justify-center gap-2 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl">
+              <Button onClick={handlePrint} className="flex-1 flex items-center justify-center gap-2 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl">
                 <Printer size={16} /> Cetak QR
               </Button>
               <Button onClick={handleResetToken} disabled={isResetting} variant="outline" className="flex-1 flex items-center justify-center gap-2 border-red-200 text-red-600 hover:bg-red-50 rounded-xl">
@@ -255,36 +298,6 @@ export default function QrManagement({ settings: initialSettings }: Props) {
         </div>
       </div>
 
-      {/* Print Area */}
-      <div id="qr-print-area" style={{ display: 'none' }}>
-        <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-white">
-          <div style={{ border: '8px solid #064E3B', borderRadius: 24, padding: 40, maxWidth: 500, width: '100%', boxShadow: '0 0 0 4px #D97706' }}>
-            <div className="text-center mb-8">
-              <div style={{ background: 'linear-gradient(135deg, #022c22, #064e3b)', borderRadius: 16, padding: '16px 24px', marginBottom: 16 }}>
-                <p style={{ color: '#D97706', fontWeight: 900, fontSize: 28, margin: 0, letterSpacing: 2 }}>MI NUR AZIZ</p>
-                <p style={{ color: '#a7f3d0', fontSize: 12, margin: '4px 0 0', letterSpacing: 1 }}>ABSENSI DIGITAL SI-AZIZ</p>
-              </div>
-              <p style={{ color: '#064E3B', fontSize: 14, fontWeight: 700, margin: 0 }}>Scan QR Code untuk Absensi</p>
-              <p style={{ color: '#6b7280', fontSize: 11, marginTop: 4 }}>Pastikan GPS aktif & dalam radius {settings?.max_radius_meters ?? 50}m</p>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-              <div style={{ background: '#064E3B', borderRadius: 20, padding: 20 }}>
-                <div style={{ background: '#fff', borderRadius: 12, padding: 12 }}>
-                  <QRCodeSVG value={settings?.qr_secret_token ?? ''} size={240} level="H" includeMargin={false} fgColor="#064E3B" />
-                </div>
-              </div>
-            </div>
-            <div style={{ background: '#f0fdf4', borderRadius: 12, padding: '12px 20px', border: '1px solid #bbf7d0', textAlign: 'center' }}>
-              <p style={{ color: '#064E3B', fontSize: 13, fontWeight: 700, margin: 0 }}>
-                Jam Masuk: {jadwal['1']?.masuk ?? '07:00'} WIB
-              </p>
-              <p style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>
-                Terlambat jika scan setelah jam masuk yang telah ditentukan
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   )
 }
