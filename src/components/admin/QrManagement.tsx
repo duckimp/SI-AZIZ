@@ -130,6 +130,8 @@ export default function QrManagement({ settings: initialSettings }: Props) {
     `)
     printWindow.document.close()
   }
+
+  function handleCopyToken() {
     if (settings) {
       navigator.clipboard.writeText(settings.qr_secret_token)
       setCopied(true)
