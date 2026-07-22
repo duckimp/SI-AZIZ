@@ -124,7 +124,16 @@ export default function QrManagement({ settings: initialSettings }: Props) {
             <p style="color:#6b7280; font-size:11px; margin:4px 0 0">Terlambat jika scan setelah jam masuk yang telah ditentukan</p>
           </div>
         </div>
-        <script>setTimeout(() => { window.print(); window.close(); }, 500)</script>
+        <script>
+          window.onload = function() {
+            setTimeout(() => {
+              window.print();
+            }, 300);
+          };
+          window.onafterprint = function() {
+            window.close();
+          };
+        </script>
       </body>
       </html>
     `)
