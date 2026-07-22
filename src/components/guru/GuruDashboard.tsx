@@ -22,16 +22,34 @@ interface Props {
 type ScanState = 'idle' | 'scanning' | 'processing' | 'success' | 'error' | 'done'
 
 export default function GuruDashboard({ profile, settings, todayAttendance }: Props) {
-  const [attendance, setAttendance] = useState<Attendance | null>(todayAttendance)
+  // Helper: get today's date in Asia/Jakarta
+  const getJakartaDate = () =>
+    new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date())
+
+  // Only use todayAttendance if it matches today's Jakarta date (prevents stale PWA cache)
+  const [attendance, setAttendance] = useState<Attendance | null>(
+    todayAttendance?.tanggal === getJakartaDate() ? todayAttendance : null
+  )
   const [scanState, setScanState] = useState<ScanState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [successData, setSuccessData] = useState<{ message: string; type: 'masuk' | 'pulang' } | null>(null)
   const [currentTime, setCurrentTime] = useState('')
+  const currentDateRef = useRef(getJakartaDate())
   const gpsCache = useRef<{ allowed: boolean; distance: number; error?: string; ts: number } | null>(null)
 
   useEffect(() => {
     const updateTime = () => {
-      setCurrentTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+      const now = new Date()
+      setCurrentTime(now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+
+      // Detect day change — reset attendance state at midnight Jakarta
+      const newDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(now)
+      if (currentDateRef.current !== newDate) {
+        currentDateRef.current = newDate
+        setAttendance(null)
+        setScanState('idle')
+        gpsCache.current = null
+      }
     }
     updateTime()
     const timer = setInterval(updateTime, 1000)

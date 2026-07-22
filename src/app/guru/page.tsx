@@ -30,7 +30,7 @@ export default async function GuruPage() {
     .eq('id', 1)
     .single()
 
-  const today = new Date().toLocaleDateString('en-CA')
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date())
   const { data: todayAttendance } = await admin
     .from('attendances')
     .select('*')
