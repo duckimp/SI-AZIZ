@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Profile, SchoolSettings, Attendance } from '@/lib/types'
 import { logout } from '@/app/actions/auth'
 import { scanAttendance } from '@/app/actions/attendance'
@@ -27,6 +27,7 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
   const [errorMsg, setErrorMsg] = useState('')
   const [successData, setSuccessData] = useState<{ message: string; type: 'masuk' | 'pulang' } | null>(null)
   const [currentTime, setCurrentTime] = useState('')
+  const gpsCache = useRef<{ allowed: boolean; distance: number; error?: string; ts: number } | null>(null)
 
   useEffect(() => {
     const updateTime = () => {
@@ -37,6 +38,19 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
     return () => clearInterval(timer)
   }, [])
 
+  // Pre-fetch GPS as soon as scanner is opened so it's ready when QR is scanned
+  const startScanner = () => {
+    setErrorMsg('')
+    setScanState('scanning')
+    if (settings) {
+      // Start GPS fetch in background immediately
+      checkGpsRadius(settings.latitude, settings.longitude, settings.max_radius_meters)
+        .then(result => {
+          gpsCache.current = { ...result, ts: Date.now() }
+        })
+        .catch(() => {})
+    }
+  }
 
   const getScanButtonLabel = () => {
     if (!attendance?.waktu_masuk) return 'Scan Absen Masuk'
@@ -54,7 +68,14 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
       return
     }
 
-    const gps = await checkGpsRadius(settings.latitude, settings.longitude, settings.max_radius_meters)
+    // Use cached GPS (if fresh < 15s), otherwise fetch again
+    const GPS_CACHE_TTL = 15000
+    const gps = gpsCache.current && (Date.now() - gpsCache.current.ts) < GPS_CACHE_TTL
+      ? gpsCache.current
+      : await checkGpsRadius(settings.latitude, settings.longitude, settings.max_radius_meters)
+
+    gpsCache.current = { ...gps, ts: Date.now() }
+
     if (!gps.allowed) {
       setErrorMsg(gps.error ?? `Anda terlalu jauh dari sekolah (${gps.distance}m). Maksimal ${settings.max_radius_meters}m.`)
       setScanState('error')
@@ -183,8 +204,11 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
         {!isDone ? (
           <button
             onClick={() => {
-              setErrorMsg('')
-              setScanState(scanState === 'scanning' ? 'idle' : 'scanning')
+              if (scanState === 'scanning') {
+                setScanState('idle')
+              } else {
+                startScanner()
+              }
             }}
             disabled={scanState === 'processing'}
             className={`w-full py-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 shadow-2xl

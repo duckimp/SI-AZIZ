@@ -59,7 +59,7 @@ export async function checkGpsRadius(
       (err) => {
         resolve({ allowed: false, distance: 0, error: `Gagal mendapatkan lokasi: ${err.message}` })
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
     )
   })
 }
