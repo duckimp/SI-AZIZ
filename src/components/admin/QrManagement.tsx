@@ -101,7 +101,7 @@ export default function QrManagement({ settings: initialSettings }: Props) {
       <style>{`
         @media print {
           body > * { display: none !important; }
-          #qr-print-area { display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+          #qr-print-area { display: flex !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
         }
       `}</style>
 
@@ -256,7 +256,7 @@ export default function QrManagement({ settings: initialSettings }: Props) {
       </div>
 
       {/* Print Area */}
-      <div id="qr-print-area" className="hidden print:block">
+      <div id="qr-print-area" style={{ display: 'none' }}>
         <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-white">
           <div style={{ border: '8px solid #064E3B', borderRadius: 24, padding: 40, maxWidth: 500, width: '100%', boxShadow: '0 0 0 4px #D97706' }}>
             <div className="text-center mb-8">
