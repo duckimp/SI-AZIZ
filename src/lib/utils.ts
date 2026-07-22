@@ -103,26 +103,43 @@ export function formatTime(time: string): string {
 }
 
 /**
- * Gets today's date in "YYYY-MM-DD" format (local timezone).
+ * Gets today's date in "YYYY-MM-DD" format (Asia/Jakarta timezone).
  */
-export function getTodayDate(): string {
+export function getTodayDate(timeZone: string = 'Asia/Jakarta'): string {
   const now = new Date()
-  return now.toLocaleDateString('en-CA')
+  return new Intl.DateTimeFormat('sv-SE', { timeZone }).format(now)
 }
 
 /**
- * Gets current local time string "HH:MM:SS".
+ * Gets current local time string "HH:MM:SS" (Asia/Jakarta timezone).
  */
-export function getCurrentTime(): string {
+export function getCurrentTime(timeZone: string = 'Asia/Jakarta'): string {
   const now = new Date()
-  return now.toTimeString().slice(0, 8)
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).format(now)
+}
+
+/**
+ * Gets today's day of week in Asia/Jakarta timezone ('0' for Sunday, '1' for Monday, etc.).
+ */
+export function getTodayDayOfWeek(timeZone: string = 'Asia/Jakarta'): string {
+  const dayStr = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(new Date())
+  const map: Record<string, string> = { Sun: '0', Mon: '1', Tue: '2', Wed: '3', Thu: '4', Fri: '5', Sat: '6' }
+  return map[dayStr] ?? new Date().getDay().toString()
 }
 
 /**
  * Determines attendance status based on current time vs jam_masuk.
  */
 export function getAttendanceStatus(currentTime: string, jamMasuk: string): 'Tepat Waktu' | 'Terlambat' {
-  return currentTime <= jamMasuk ? 'Tepat Waktu' : 'Terlambat'
+  const currentFormatted = currentTime.length === 5 ? currentTime + ':00' : currentTime
+  const jamMasukFormatted = jamMasuk.length === 5 ? jamMasuk + ':00' : jamMasuk
+  return currentFormatted <= jamMasukFormatted ? 'Tepat Waktu' : 'Terlambat'
 }
 
 /**

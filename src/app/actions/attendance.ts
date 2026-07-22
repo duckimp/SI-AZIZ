@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { getAttendanceStatus, getTodayDate, getCurrentTime } from '@/lib/utils'
+import { getAttendanceStatus, getTodayDate, getCurrentTime, getTodayDayOfWeek } from '@/lib/utils'
 
 export async function scanAttendance(qrToken: string, distance: number) {
   const supabase = createClient()
@@ -25,8 +25,8 @@ export async function scanAttendance(qrToken: string, distance: number) {
   const today = getTodayDate()
   const currentTime = getCurrentTime()
 
-  // Tentukan jam masuk & pulang berdasarkan hari ini
-  const dayOfWeek = new Date().getDay().toString() // '0'=Minggu, '1'=Senin, dst
+  // Tentukan jam masuk & pulang berdasarkan hari ini (Asia/Jakarta timezone)
+  const dayOfWeek = getTodayDayOfWeek()
   const jadwal = settings.jadwal_harian?.[dayOfWeek]
   const jamMasukHari = jadwal?.masuk ? jadwal.masuk + ':00' : settings.jam_masuk
   const isLibur = jadwal?.libur ?? false
