@@ -10,7 +10,7 @@ import ScanSuccessModal from './ScanSuccessModal'
 import { Badge } from '@/components/ui/badge'
 import {
   CheckCircle2, Clock, LogOut, MapPin, AlertCircle,
-  CalendarCheck, Scan, ChevronRight, User
+  CalendarCheck, User
 } from 'lucide-react'
 import NextImage from 'next/image'
 
