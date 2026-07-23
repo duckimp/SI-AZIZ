@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/admin/AdminLayout'
 import AdminDashboard from '@/components/admin/AdminDashboard'
-import { getDashboardStats, getTodayAttendanceList } from '@/app/actions/admin'
+import { getAdminDashboardData } from '@/app/actions/admin'
 import { getTodayDate } from '@/lib/utils'
 
 export const metadata = {
@@ -16,19 +16,20 @@ export default async function AdminPage() {
   if (!user) redirect('/login')
 
   const admin = createAdminClient()
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  const today = getTodayDate()
+
+  const [{ data: profile }, dashboardData] = await Promise.all([
+    admin
+      .from('profiles')
+      .select('id, nama, role')
+      .eq('id', user.id)
+      .single(),
+    getAdminDashboardData(today),
+  ])
 
   if (!profile || profile.role !== 'admin') redirect('/guru')
 
-  const today = getTodayDate()
-  const [stats, attendanceList] = await Promise.all([
-    getDashboardStats(today),
-    getTodayAttendanceList(today),
-  ])
+  const { stats, attendanceList } = dashboardData
 
   return (
     <AdminLayout profile={profile} activeMenu="dashboard">

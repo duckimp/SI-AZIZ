@@ -5,50 +5,57 @@ import { revalidatePath } from 'next/cache'
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 
-export async function getDashboardStats(date: string) {
+export async function getAdminDashboardData(date: string) {
   const admin = createAdminClient()
 
-  const { data: profiles } = await admin
-    .from('profiles')
-    .select('id')
-    .eq('role', 'guru')
+  const [{ data: profiles }, { data: attendances }] = await Promise.all([
+    admin
+      .from('profiles')
+      .select('id, nama, nip')
+      .eq('role', 'guru')
+      .order('nama'),
+    admin
+      .from('attendances')
+      .select('user_id, status_kehadiran, status_masuk, waktu_masuk, waktu_pulang')
+      .eq('tanggal', date),
+  ])
 
-  const totalGuru = profiles?.length ?? 0
+  const guruProfiles = profiles ?? []
+  const attendanceRows = attendances ?? []
+  const attendanceByUser = new Map(attendanceRows.map((attendance) => [attendance.user_id, attendance]))
 
-  const { data: attendances } = await admin
-    .from('attendances')
-    .select('*')
-    .eq('tanggal', date)
+  const totalGuru = guruProfiles.length
+  const hadirTepat = attendanceRows.filter(
+    (attendance) => attendance.status_kehadiran === 'Hadir' && attendance.status_masuk === 'Tepat Waktu'
+  ).length
+  const terlambat = attendanceRows.filter(
+    (attendance) => attendance.status_kehadiran === 'Hadir' && attendance.status_masuk === 'Terlambat'
+  ).length
+  const izinSakit = attendanceRows.filter(
+    (attendance) => ['Izin', 'Sakit'].includes(attendance.status_kehadiran)
+  ).length
+  const alpha = attendanceRows.filter((attendance) => attendance.status_kehadiran === 'Alpha').length
+  const belumAbsen = Math.max(totalGuru - attendanceRows.length, 0)
 
-  const hadirTepat = attendances?.filter(a => a.status_kehadiran === 'Hadir' && a.status_masuk === 'Tepat Waktu').length ?? 0
-  const terlambat = attendances?.filter(a => a.status_kehadiran === 'Hadir' && a.status_masuk === 'Terlambat').length ?? 0
-  const izinSakit = attendances?.filter(a => ['Izin', 'Sakit'].includes(a.status_kehadiran)).length ?? 0
-  const alpha = attendances?.filter(a => a.status_kehadiran === 'Alpha').length ?? 0
-  const belumAbsen = totalGuru - (attendances?.length ?? 0)
+  const attendanceList = guruProfiles.map((profile) => ({
+    profile,
+    attendance: attendanceByUser.get(profile.id) ?? null,
+  }))
 
-  return { totalGuru, hadirTepat, terlambat, izinSakit, alpha, belumAbsen }
+  return {
+    stats: { totalGuru, hadirTepat, terlambat, izinSakit, alpha, belumAbsen },
+    attendanceList,
+  }
+}
+
+export async function getDashboardStats(date: string) {
+  const { stats } = await getAdminDashboardData(date)
+  return stats
 }
 
 export async function getTodayAttendanceList(date: string) {
-  const admin = createAdminClient()
-
-  const { data: profiles } = await admin
-    .from('profiles')
-    .select('id, nama, nip')
-    .eq('role', 'guru')
-
-  const { data: attendances } = await admin
-    .from('attendances')
-    .select('*')
-    .eq('tanggal', date)
-
-  return profiles?.map(p => {
-    const att = attendances?.find(a => a.user_id === p.id)
-    return {
-      profile: p,
-      attendance: att ?? null,
-    }
-  }) ?? []
+  const { attendanceList } = await getAdminDashboardData(date)
+  return attendanceList
 }
 
 // ── GURU CRUD ─────────────────────────────────────────────────────────────────
