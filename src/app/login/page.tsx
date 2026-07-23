@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import LoginForm from '@/components/auth/LoginForm'
 
 export const metadata = {
@@ -15,9 +16,17 @@ export default async function LoginPage() {
       <div className="relative w-full max-w-md animate-slide-up">
         {/* Logo & Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gold-600 shadow-2xl shadow-gold-600/40 mb-4">
-            <span className="text-3xl font-black text-white">MI</span>
+          {/* Logo Sekolah */}
+          <div className="relative w-24 h-24 mx-auto mb-3 drop-shadow-xl">
+            <Image
+              src="/icons/icon-512x512.png" // atau "/logo.webp" sesuai lokasi file di folder public/
+              alt="Logo MI Nur Aziz"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
+
           <h1 className="text-3xl font-black text-white tracking-tight">Si-Aziz</h1>
           <p className="text-emerald-200 mt-1 text-sm font-medium">Sistem Absensi Guru MI Nur Aziz</p>
         </div>

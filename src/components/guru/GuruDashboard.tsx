@@ -12,6 +12,7 @@ import {
   CheckCircle2, Clock, LogOut, MapPin, AlertCircle,
   CalendarCheck, Scan, ChevronRight, User
 } from 'lucide-react'
+import NextImage from 'next/image'
 
 interface Props {
   profile: Profile
@@ -122,8 +123,14 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
       <header className="px-5 pt-safe-top pt-8 pb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gold-600 flex items-center justify-center shadow-lg shadow-gold-600/40">
-              <span className="text-white font-black text-sm">MI</span>
+            <div className="relative w-10 h-10 shrink-0 drop-shadow">
+              <NextImage
+                src="/logo.webp"
+                alt="Logo MI Nur Aziz"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <div>
               <p className="text-emerald-300 text-xs font-medium">Si-Aziz Absensi</p>
@@ -167,7 +174,7 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
             <div className="flex items-center gap-2 mb-1">
-              <Clock size={14} className="text-gold-400" />
+              <Clock size={16} className="text-gold-400" />
               <span className="text-emerald-300 text-xs font-medium">Absen Masuk</span>
             </div>
             {attendance?.waktu_masuk ? (
@@ -178,19 +185,19 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
                 </Badge>
               </>
             ) : (
-              <p className="text-emerald-400 text-sm mt-1">Belum absen</p>
+              <p className="text-emerald-400 text-md mt-1">Belum absen</p>
             )}
           </div>
 
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
             <div className="flex items-center gap-2 mb-1">
-              <CalendarCheck size={14} className="text-gold-400" />
+              <CalendarCheck size={16} className="text-gold-400" />
               <span className="text-emerald-300 text-xs font-medium">Absen Pulang</span>
             </div>
             {attendance?.waktu_pulang ? (
               <p className="text-white font-bold text-xl tabular-nums">{formatTime(attendance.waktu_pulang)}</p>
             ) : (
-              <p className="text-emerald-400 text-sm mt-1">Belum absen</p>
+              <p className="text-emerald-400 text-md mt-1">Belum absen</p>
             )}
           </div>
         </div>
@@ -199,7 +206,7 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
         {settings && (
           <div className="flex items-center gap-2 text-emerald-400 text-xs px-1">
             <Clock size={12} />
-            <span>Jam Masuk: {formatTime(settings.jam_masuk)} • Jam Pulang: {formatTime(settings.jam_pulang)}</span>
+            <span>Jam Masuk: 07.00 WIB • Jam Pulang: 13.15 WIB</span>
           </div>
         )}
   
@@ -249,9 +256,7 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
               </>
             ) : (
               <>
-                <Scan size={24} />
                 <span className="flex-1 text-center">{getScanButtonLabel()}</span>
-                <ChevronRight size={20} />
               </>
             )}
           </button>

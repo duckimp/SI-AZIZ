@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import NextImage from 'next/image'
 
 interface Props {
   profile: Profile
@@ -47,8 +48,14 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-6 border-b border-white/10">
-          <div className="w-10 h-10 rounded-xl bg-gold-600 flex items-center justify-center shadow-lg shadow-gold-600/40 shrink-0">
-            <span className="text-white font-black text-sm">MI</span>
+          <div className="relative w-10 h-10 shrink-0 drop-shadow">
+            <NextImage
+              src="/logo.webp"
+              alt="Logo MI Nur Aziz"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           <div>
             <p className="text-white font-black text-base leading-tight">Si-Aziz</p>
