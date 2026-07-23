@@ -6,7 +6,7 @@ import { logout } from '@/app/actions/auth'
 import { Profile } from '@/lib/types'
 import {
   LayoutDashboard, Users, BarChart3, QrCode,
-  LogOut, Menu, X, ChevronRight
+  LogOut, Menu, X, ChevronRight, Database
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -22,6 +22,7 @@ const menuItems = [
   { key: 'guru', label: 'Manajemen Guru', href: '/admin/guru', icon: Users },
   { key: 'laporan', label: 'Laporan & Export', href: '/admin/laporan', icon: BarChart3 },
   { key: 'qr', label: 'Kelola QR Code', href: '/admin/qr', icon: QrCode },
+  { key: 'backup', label: 'Backup & Restore', href: '/admin/backup', icon: Database },
 ]
 
 export default function AdminLayout({ profile, activeMenu, children }: Props) {

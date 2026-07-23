@@ -193,3 +193,80 @@ export async function updateJadwalHarian(jadwal: Record<string, { masuk: string;
   revalidatePath('/admin/qr')
   return { success: true }
 }
+
+export async function exportSystemData() {
+  const admin = createAdminClient()
+  
+  const [settingsResult, profilesResult, attendancesResult] = await Promise.all([
+    admin.from('school_settings').select('*'),
+    admin.from('profiles').select('*'),
+    admin.from('attendances').select('*')
+  ])
+
+  if (settingsResult.error) return { success: false, error: settingsResult.error.message }
+  if (profilesResult.error) return { success: false, error: profilesResult.error.message }
+  if (attendancesResult.error) return { success: false, error: attendancesResult.error.message }
+
+  return {
+    success: true,
+    data: {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      school_settings: settingsResult.data || [],
+      profiles: profilesResult.data || [],
+      attendances: attendancesResult.data || []
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function importSystemData(payload: any) {
+  const admin = createAdminClient()
+
+  if (!payload || typeof payload !== 'object') {
+    return { success: false, error: 'Format payload tidak valid.' }
+  }
+
+  const { school_settings, profiles, attendances } = payload
+
+  // Validate basic structure
+  if (!Array.isArray(school_settings) || !Array.isArray(profiles) || !Array.isArray(attendances)) {
+    return { success: false, error: 'Data backup tidak lengkap atau rusak.' }
+  }
+
+  // Restore school_settings
+  if (school_settings.length > 0) {
+    const { error: settingsError } = await admin
+      .from('school_settings')
+      .upsert(school_settings, { onConflict: 'id' })
+    if (settingsError) return { success: false, error: `Gagal restore pengaturan: ${settingsError.message}` }
+  }
+
+  // Restore profiles (Note: might fail if referenced auth user doesn't exist)
+  if (profiles.length > 0) {
+    const { error: profilesError } = await admin
+      .from('profiles')
+      .upsert(profiles, { onConflict: 'id' })
+    if (profilesError) {
+      return { 
+        success: false, 
+        error: `Gagal restore profil guru: ${profilesError.message}. Pastikan semua akun email guru sudah terdaftar di Supabase Auth terlebih dahulu.` 
+      }
+    }
+  }
+
+  // Restore attendances
+  if (attendances.length > 0) {
+    const { error: attendancesError } = await admin
+      .from('attendances')
+      .upsert(attendances, { onConflict: 'id' })
+    if (attendancesError) return { success: false, error: `Gagal restore absensi: ${attendancesError.message}` }
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/guru')
+  revalidatePath('/admin/laporan')
+  revalidatePath('/admin/qr')
+
+  return { success: true }
+}
