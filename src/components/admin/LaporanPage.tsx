@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { FileSpreadsheet, Search, Download, Loader2, Pencil } from 'lucide-react'
+import { FileSpreadsheet, Search, Download, Loader2, Pencil, FileText } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 interface Props {
@@ -73,6 +73,11 @@ export default function LaporanPage({ guruList }: Props) {
     XLSX.writeFile(wb, `Rekap_Absensi_${startDate}_${endDate}.xlsx`)
   }
 
+  async function handleExportPdf() {
+    const { exportAttendancePdf } = await import('@/lib/exportAttendancePdf')
+    exportAttendancePdf(data, startDate, endDate)
+  }
+
   function openEditKeterangan(row: Attendance) {
     setSelectedRow(row)
     setKeteranganText(row.keterangan ?? '')
@@ -113,7 +118,7 @@ export default function LaporanPage({ guruList }: Props) {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-black text-gray-900">Laporan & Export Data</h2>
-        <p className="text-gray-500 text-sm mt-1">Filter dan unduh rekap absensi dalam format Excel</p>
+        <p className="text-gray-500 text-sm mt-1">Filter dan unduh rekap absensi dalam format Excel atau PDF</p>
       </div>
 
       {message && (
@@ -171,13 +176,22 @@ export default function LaporanPage({ guruList }: Props) {
               <h3 className="font-bold text-gray-900">Hasil ({data.length} record)</h3>
             </div>
             {data.length > 0 && (
-              <Button
-                onClick={handleExportExcel}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-xl"
-              >
-                <Download size={14} />
-                Export Excel
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleExportPdf}
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-xl"
+                >
+                  <FileText size={14} />
+                  Export PDF
+                </Button>
+                <Button
+                  onClick={handleExportExcel}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-xl"
+                >
+                  <Download size={14} />
+                  Export Excel
+                </Button>
+              </div>
             )}
           </div>
           <div className="overflow-x-auto">
