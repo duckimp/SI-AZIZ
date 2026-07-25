@@ -1,15 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Profile } from '@/lib/types'
-import { getAttendanceReport } from '@/app/actions/admin'
+import { Attendance, Profile } from '@/lib/types'
+import { getAttendanceReport, updateAttendanceKeterangan } from '@/app/actions/admin'
 import { formatTime, getTodayDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { FileSpreadsheet, Search, Download, Loader2 } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { FileSpreadsheet, Search, Download, Loader2, Pencil } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 interface Props {
@@ -23,10 +25,19 @@ export default function LaporanPage({ guruList }: Props) {
   const [startDate, setStartDate] = useState(firstOfMonth)
   const [endDate, setEndDate] = useState(today)
   const [selectedGuru, setSelectedGuru] = useState('all')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<Attendance[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [selectedRow, setSelectedRow] = useState<Attendance | null>(null)
+  const [keteranganText, setKeteranganText] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text })
+    setTimeout(() => setMessage(null), 3000)
+  }
 
   async function handleSearch() {
     setIsLoading(true)
@@ -62,8 +73,34 @@ export default function LaporanPage({ guruList }: Props) {
     XLSX.writeFile(wb, `Rekap_Absensi_${startDate}_${endDate}.xlsx`)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getStatusBadge = (row: any) => {
+  function openEditKeterangan(row: Attendance) {
+    setSelectedRow(row)
+    setKeteranganText(row.keterangan ?? '')
+    setEditDialogOpen(true)
+  }
+
+  async function handleSaveKeterangan() {
+    if (!selectedRow) return
+    setIsSaving(true)
+    const result = await updateAttendanceKeterangan({
+      id: selectedRow.id,
+      keterangan: keteranganText,
+    })
+    setIsSaving(false)
+    if (result.success) {
+      setData(prev =>
+        prev.map(r =>
+          r.id === selectedRow.id ? { ...r, keterangan: keteranganText } : r
+        )
+      )
+      setEditDialogOpen(false)
+      showMessage('success', 'Keterangan berhasil disimpan!')
+    } else {
+      showMessage('error', result.error ?? 'Terjadi kesalahan')
+    }
+  }
+
+  const getStatusBadge = (row: Attendance) => {
     if (row.status_kehadiran === 'Izin') return <Badge className="bg-purple-100 text-purple-700">Izin</Badge>
     if (row.status_kehadiran === 'Sakit') return <Badge className="bg-blue-100 text-blue-700">Sakit</Badge>
     if (row.status_kehadiran === 'Alpha') return <Badge className="bg-red-100 text-red-700">Alpha</Badge>
@@ -78,6 +115,14 @@ export default function LaporanPage({ guruList }: Props) {
         <h2 className="text-2xl font-black text-gray-900">Laporan & Export Data</h2>
         <p className="text-gray-500 text-sm mt-1">Filter dan unduh rekap absensi dalam format Excel</p>
       </div>
+
+      {message && (
+        <div className={`px-4 py-3 rounded-xl text-sm font-medium animate-fade-in ${
+          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {message.type === 'success' ? '✓' : '⚠️'} {message.text}
+        </div>
+      )}
 
       {/* Filter Card */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
@@ -155,7 +200,19 @@ export default function LaporanPage({ guruList }: Props) {
                     <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.waktu_masuk ? formatTime(row.waktu_masuk) : '—'}</td>
                     <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.waktu_pulang ? formatTime(row.waktu_pulang) : '—'}</td>
                     <td className="px-6 py-3">{getStatusBadge(row)}</td>
-                    <td className="px-6 py-3 text-sm text-gray-500">{row.keterangan ?? '—'}</td>
+                    <td className="px-6 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500 flex-1">{row.keterangan ?? '—'}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 text-gray-400 hover:text-emerald-600"
+                          onClick={() => openEditKeterangan(row)}
+                        >
+                          <Pencil size={14} />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {data.length === 0 && (
@@ -170,6 +227,35 @@ export default function LaporanPage({ guruList }: Props) {
           </div>
         </div>
       )}
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-emerald-900">Edit Keterangan</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              <strong>{selectedRow?.profiles?.nama}</strong> — {selectedRow?.tanggal}
+            </p>
+            <div className="space-y-1">
+              <Label>Keterangan</Label>
+              <Textarea
+                value={keteranganText}
+                onChange={e => setKeteranganText(e.target.value)}
+                placeholder="Alasan izin, sakit, terlambat, dll..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Batal</Button>
+            <Button className="btn-emerald" onClick={handleSaveKeterangan} disabled={isSaving}>
+              {isSaving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              Simpan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

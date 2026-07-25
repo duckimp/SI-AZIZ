@@ -169,6 +169,22 @@ export async function getAttendanceReport(
   return data ?? []
 }
 
+export async function updateAttendanceKeterangan(data: {
+  id: string
+  keterangan: string
+}) {
+  const admin = createAdminClient()
+
+  const { error } = await admin
+    .from('attendances')
+    .update({ keterangan: data.keterangan })
+    .eq('id', data.id)
+
+  if (error) return { success: false, error: error.message }
+  revalidatePath('/admin/laporan')
+  return { success: true }
+}
+
 // ── SCHOOL SETTINGS ────────────────────────────────────────────────────────────
 
 export async function getSchoolSettings() {
