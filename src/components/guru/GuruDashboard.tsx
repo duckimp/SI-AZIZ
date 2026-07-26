@@ -125,7 +125,7 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 shrink-0 drop-shadow">
               <NextImage
-                src="/logo.webp"
+                src="/logo.png"
                 alt="Logo MI Nur Aziz"
                 fill
                 className="object-contain"

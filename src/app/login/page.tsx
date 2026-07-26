@@ -19,7 +19,7 @@ export default async function LoginPage() {
           {/* Logo Sekolah */}
           <div className="relative w-24 h-24 mx-auto mb-3 drop-shadow-xl">
             <Image
-              src="/icons/icon-512x512.png" // atau "/logo.webp" sesuai lokasi file di folder public/
+              src="/logo.png"
               alt="Logo MI Nur Aziz"
               fill
               className="object-contain"

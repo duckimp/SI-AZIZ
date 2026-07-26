@@ -50,7 +50,7 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
         <div className="flex items-center gap-3 px-5 py-6 border-b border-white/10">
           <div className="relative w-10 h-10 shrink-0 drop-shadow">
             <NextImage
-              src="/logo.webp"
+              src="/logo.png"
               alt="Logo MI Nur Aziz"
               fill
               className="object-contain"
