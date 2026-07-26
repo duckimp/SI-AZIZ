@@ -70,40 +70,83 @@ export default function QrScanner({ onScan, onClose }: Props) {
   }, [])
 
   return (
-    <div className="bg-black/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-2">
-          <Camera size={18} className="text-gold-400" />
-          <span className="text-white font-semibold text-sm">Arahkan ke QR Code</span>
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-in fade-in duration-300">
+      {/* Header Overlay */}
+      <div className="absolute top-0 left-0 right-0 z-20 p-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gold-600/20 flex items-center justify-center border border-gold-500/30">
+            <Camera size={20} className="text-gold-400" />
+          </div>
+          <div>
+            <h3 className="text-white font-bold">Scanner Absensi</h3>
+            <p className="text-white/60 text-xs">Arahkan kamera ke QR Code</p>
+          </div>
         </div>
-        <button onClick={onClose} className="text-white/60 hover:text-white transition-colors p-1">
-          <X size={20} />
+        <button
+          onClick={onClose}
+          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+        >
+          <X size={24} />
         </button>
       </div>
 
-      <div className="relative">
+      {/* Camera View */}
+      <div className="flex-1 relative flex items-center justify-center overflow-hidden">
         {isStarting && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 rounded-b-2xl" style={{ minHeight: 300 }}>
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-gold-400 border-t-transparent rounded-full animate-spin" />
-              <p className="text-white text-sm">Membuka kamera...</p>
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-gold-500/20 border-t-gold-500 rounded-full animate-spin" />
+              <p className="text-white/70 font-medium">Menyiapkan kamera...</p>
             </div>
           </div>
         )}
+
         {cameraError && (
-          <div className="p-6 text-center">
-            <p className="text-red-300 text-sm">{cameraError}</p>
-            <p className="text-white/50 text-xs mt-2">Pastikan izin kamera sudah diberikan.</p>
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black p-8 text-center">
+            <div className="max-w-xs">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+                <X size={32} className="text-red-400" />
+              </div>
+              <p className="text-red-300 font-medium mb-2">{cameraError}</p>
+              <p className="text-white/40 text-sm mb-6">Pastikan izin kamera sudah diberikan di pengaturan browser Anda.</p>
+              <button
+                onClick={onClose}
+                className="w-full py-3 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-colors"
+              >
+                Kembali ke Dashboard
+              </button>
+            </div>
           </div>
         )}
-        <div id={divId} className="w-full" style={{ minHeight: cameraError ? 0 : 300 }} />
+
+        <div id={divId} className="w-full h-full [&>video]:object-cover" />
+
+        {/* Scanning Frame Overlay */}
+        {!cameraError && !isStarting && (
+          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+            <div className="relative w-64 h-64">
+              {/* Corner Borders */}
+              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-gold-500 rounded-tl-2xl" />
+              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-gold-500 rounded-tr-2xl" />
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-gold-500 rounded-bl-2xl" />
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-gold-500 rounded-br-2xl" />
+              
+              {/* Scanning Line Animation */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-gold-400 to-transparent animate-scan shadow-[0_0_15px_rgba(212,175,55,0.8)]" />
+            </div>
+            <p className="mt-8 text-white/80 text-sm font-medium px-6 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+              Posisikan QR Code di dalam kotak
+            </p>
+          </div>
+        )}
       </div>
 
-      {!cameraError && (
-        <p className="text-center text-white/50 text-xs py-3 px-4">
-          Pastikan QR Code terlihat jelas di dalam kotak
+      {/* Footer Overlay */}
+      <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent text-center">
+        <p className="text-white/40 text-xs">
+          Si-Aziz MI Nur Aziz • Sistem Absensi Digital
         </p>
-      )}
+      </div>
     </div>
   )
 }

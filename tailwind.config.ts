@@ -97,13 +97,6 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      animation: {
-        "fade-in": "fadeIn 0.3s ease-in-out",
-        "slide-up": "slideUp 0.3s ease-out",
-        "bounce-in": "bounceIn 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97)",
-        "spin-slow": "spin 2s linear infinite",
-        "pulse-custom": "pulseScale 0.6s ease-in-out",
-      },
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },
@@ -123,6 +116,18 @@ const config: Config = {
           "0%, 100%": { transform: "scale(1)" },
           "50%": { transform: "scale(1.05)" },
         },
+        scan: {
+          "0%": { top: "0%" },
+          "100%": { top: "100%" },
+        },
+      },
+      animation: {
+        "fade-in": "fadeIn 0.3s ease-in-out",
+        "slide-up": "slideUp 0.3s ease-out",
+        "bounce-in": "bounceIn 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97)",
+        "spin-slow": "spin 2s linear infinite",
+        "pulse-custom": "pulseScale 0.6s ease-in-out",
+        scan: "scan 2s linear infinite",
       },
     },
   },

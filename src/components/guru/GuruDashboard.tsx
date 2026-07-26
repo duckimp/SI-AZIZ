@@ -218,29 +218,18 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
           </div>
         )}
 
-        {/* Scanner */}
+        {/* Scanner Modal */}
         {scanState === 'scanning' && (
-          <div className="animate-fade-in">
-            <QrScanner onScan={handleScan} onClose={() => setScanState('idle')} />
-          </div>
+          <QrScanner onScan={handleScan} onClose={() => setScanState('idle')} />
         )}
 
         {/* Main Scan Button */}
         {!isDone ? (
           <button
-            onClick={() => {
-              if (scanState === 'scanning') {
-                setScanState('idle')
-              } else {
-                startScanner()
-              }
-            }}
+            onClick={() => startScanner()}
             disabled={scanState === 'processing'}
             className={`w-full py-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 shadow-2xl
-              ${scanState === 'scanning'
-                ? 'bg-red-500/80 text-white border border-red-400/50'
-                : 'bg-gold-600 hover:bg-gold-500 text-white shadow-gold-600/40 hover:-translate-y-0.5 active:translate-y-0'
-              }
+              bg-gold-600 hover:bg-gold-500 text-white shadow-gold-600/40 hover:-translate-y-0.5 active:translate-y-0
               ${scanState === 'processing' ? 'opacity-70 cursor-not-allowed' : ''}
             `}
           >
@@ -248,11 +237,6 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
               <>
                 <div className="w-6 h-6 border-3 border-white/40 border-t-white rounded-full animate-spin" />
                 Memproses...
-              </>
-            ) : scanState === 'scanning' ? (
-              <>
-                <AlertCircle size={24} />
-                Tutup Kamera
               </>
             ) : (
               <>
