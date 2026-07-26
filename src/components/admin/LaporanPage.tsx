@@ -25,6 +25,7 @@ export default function LaporanPage({ guruList }: Props) {
   const [startDate, setStartDate] = useState(firstOfMonth)
   const [endDate, setEndDate] = useState(today)
   const [selectedGuru, setSelectedGuru] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
   const [data, setData] = useState<Attendance[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searched, setSearched] = useState(false)
@@ -48,7 +49,7 @@ export default function LaporanPage({ guruList }: Props) {
   }
 
   function handleExportExcel() {
-    const excelData = data.map((row, i) => ({
+    const excelData = filteredData.map((row, i) => ({
       'No': i + 1,
       'Tanggal': row.tanggal,
       'Nama Guru': row.profiles?.nama ?? '-',
@@ -75,7 +76,7 @@ export default function LaporanPage({ guruList }: Props) {
 
   async function handleExportPdf() {
     const { exportAttendancePdf } = await import('@/lib/exportAttendancePdf')
-    exportAttendancePdf(data, startDate, endDate)
+    exportAttendancePdf(filteredData, startDate, endDate, selectedStatus)
   }
 
   function openEditKeterangan(row: Attendance) {
@@ -114,6 +115,32 @@ export default function LaporanPage({ guruList }: Props) {
     return <Badge variant="outline">-</Badge>
   }
 
+  const getRowStatus = (row: Attendance): string => {
+    if (row.status_kehadiran === 'Izin') return 'Izin'
+    if (row.status_kehadiran === 'Sakit') return 'Sakit'
+    if (row.status_kehadiran === 'Alpha') return 'Alpha'
+    if (row.status_masuk === 'Terlambat') return 'Terlambat'
+    if (row.waktu_masuk) return 'Tepat Waktu'
+    return '-'
+  }
+
+  // Apply status filter to data
+  const filteredData = selectedStatus === 'all' 
+    ? data 
+    : data.filter(row => getRowStatus(row) === selectedStatus)
+
+  const getStatusLabel = (status: string): string => {
+    const labels: Record<string, string> = {
+      'all': 'Semua',
+      'Tepat Waktu': 'TEPAT WAKTU',
+      'Terlambat': 'TERLAMBAT',
+      'Izin': 'IZIN',
+      'Sakit': 'SAKIT',
+      'Alpha': 'ALPHA',
+    }
+    return labels[status] || status
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -131,7 +158,7 @@ export default function LaporanPage({ guruList }: Props) {
 
       {/* Filter Card */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="space-y-1">
             <Label className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Dari Tanggal</Label>
             <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
@@ -154,6 +181,22 @@ export default function LaporanPage({ guruList }: Props) {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Status</Label>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Semua Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="Tepat Waktu">Tepat Waktu</SelectItem>
+                <SelectItem value="Terlambat">Terlambat</SelectItem>
+                <SelectItem value="Izin">Izin</SelectItem>
+                <SelectItem value="Sakit">Sakit</SelectItem>
+                <SelectItem value="Alpha">Alpha</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-end">
             <Button
               onClick={handleSearch}
@@ -173,9 +216,9 @@ export default function LaporanPage({ guruList }: Props) {
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileSpreadsheet size={18} className="text-emerald-600" />
-              <h3 className="font-bold text-gray-900">Hasil ({data.length} record)</h3>
+              <h3 className="font-bold text-gray-900">Hasil ({filteredData.length} record)</h3>
             </div>
-            {data.length > 0 && (
+            {filteredData.length > 0 && (
               <div className="flex items-center gap-2">
                 <Button
                   onClick={handleExportPdf}
@@ -207,7 +250,7 @@ export default function LaporanPage({ guruList }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {data.map((row) => (
+                {filteredData.map((row) => (
                   <tr key={row.id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.tanggal}</td>
                     <td className="px-6 py-3 text-sm font-semibold text-gray-900">{row.profiles?.nama ?? '-'}</td>
@@ -229,7 +272,7 @@ export default function LaporanPage({ guruList }: Props) {
                     </td>
                   </tr>
                 ))}
-                {data.length === 0 && (
+                {filteredData.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">
                       Tidak ada data untuk filter yang dipilih.

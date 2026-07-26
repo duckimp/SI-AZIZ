@@ -38,7 +38,8 @@ export function getReportPeriodLabel(startDate: string, endDate: string): string
 export function exportAttendancePdf(
   data: Attendance[],
   startDate: string,
-  endDate: string
+  endDate: string,
+  statusFilter: string = 'all'
 ) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -50,7 +51,22 @@ export function exportAttendancePdf(
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(11)
-  doc.text(periodLabel, pageWidth / 2, 22, { align: 'center' })
+  
+  // Add status filter to subtitle if not "all"
+  let subtitle = periodLabel
+  if (statusFilter !== 'all') {
+    const statusLabels: Record<string, string> = {
+      'Tepat Waktu': 'TEPAT WAKTU',
+      'Terlambat': 'TERLAMBAT',
+      'Izin': 'IZIN',
+      'Sakit': 'SAKIT',
+      'Alpha': 'ALPHA',
+    }
+    const statusLabel = statusLabels[statusFilter] || statusFilter
+    subtitle = `${periodLabel} — ${statusLabel}`
+  }
+  
+  doc.text(subtitle, pageWidth / 2, 22, { align: 'center' })
 
   const body = data.map(row => [
     row.tanggal,
