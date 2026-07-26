@@ -129,18 +129,6 @@ export default function LaporanPage({ guruList }: Props) {
     ? data 
     : data.filter(row => getRowStatus(row) === selectedStatus)
 
-  const getStatusLabel = (status: string): string => {
-    const labels: Record<string, string> = {
-      'all': 'Semua',
-      'Tepat Waktu': 'TEPAT WAKTU',
-      'Terlambat': 'TERLAMBAT',
-      'Izin': 'IZIN',
-      'Sakit': 'SAKIT',
-      'Alpha': 'ALPHA',
-    }
-    return labels[status] || status
-  }
-
   return (
     <div className="space-y-6">
       <div>
