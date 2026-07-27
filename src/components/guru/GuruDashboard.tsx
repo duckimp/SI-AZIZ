@@ -206,7 +206,7 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
         {settings && (
           <div className="flex items-center gap-2 text-emerald-400 text-xs px-1">
             <Clock size={12} />
-            <span>Jam Masuk: 07.00 WIB • Jam Pulang: 13.15 WIB</span>
+            <span>Jam Masuk: 06.45 WIB • Jam Pulang: 13.15 WIB</span>
           </div>
         )}
   
