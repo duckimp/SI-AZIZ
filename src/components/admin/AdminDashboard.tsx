@@ -1,13 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { DashboardStats } from '@/lib/types'
 import { Profile } from '@/lib/types'
 import { formatTime } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import {
-  Users, CheckCircle2, Clock, XCircle, AlertCircle, UserX,
-  TrendingUp
-} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Calendar, Plus, Loader2, CalendarDays, AlertCircle, CheckCircle, Users, CheckCircle2, Clock, XCircle, UserX, TrendingUp } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface AttendanceItem {
   profile: Pick<Profile, 'id' | 'nama' | 'nip'>
@@ -27,6 +27,9 @@ interface Props {
 }
 
 export default function AdminDashboard({ stats, attendanceList, today }: Props) {
+  const [selectedDate, setSelectedDate] = useState(today)
+  const [isGenerating, setIsGenerating] = useState(false)
+
   const statCards = [
     { label: 'Total Guru', value: stats.totalGuru, icon: Users, color: 'bg-blue-50 text-blue-600 border-blue-100' },
     { label: 'Tepat Waktu', value: stats.hadirTepat, icon: CheckCircle2, color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
@@ -36,7 +39,7 @@ export default function AdminDashboard({ stats, attendanceList, today }: Props) 
     { label: 'Belum Absen', value: stats.belumAbsen, icon: UserX, color: 'bg-gray-50 text-gray-600 border-gray-200' },
   ]
 
-  const dateStr = new Date(today + 'T00:00:00').toLocaleDateString('id-ID', {
+  const dateStr = new Date(selectedDate + 'T00:00:00').toLocaleDateString('id-ID', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   })
 
@@ -51,12 +54,90 @@ export default function AdminDashboard({ stats, attendanceList, today }: Props) 
     return <Badge variant="outline">-</Badge>
   }
 
+  const handleGenerateAlpha = async () => {
+    setIsGenerating(true)
+    try {
+      const response = await fetch('/api/admin/generate-alpha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDate }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast.success(data.message || 'Alpha berhasil digenerate', {
+          description: `${data.count} guru ditandai Alpha`,
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+        })
+        // Refresh the page to show updated data
+        window.location.reload()
+      } else {
+        toast.error(data.error || 'Gagal generate alpha', {
+          icon: <AlertCircle className="h-5 w-5 text-red-500" />,
+        })
+      }
+    } catch {
+      toast.error('Terjadi kesalahan', {
+        icon: <AlertCircle className="h-5 w-5 text-red-500" />,
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const isFutureDate = selectedDate > today
+
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-black text-gray-900">Dashboard Absensi</h2>
-        <p className="text-gray-500 text-sm capitalize mt-1">{dateStr}</p>
+      {/* Header with Date Picker and Generate Button */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-gray-900">Dashboard Absensi</h2>
+          <p className="text-gray-500 text-sm capitalize mt-1">{dateStr}</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-start sm:items-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label htmlFor="date-picker" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+              <CalendarDays className="w-4 h-4 inline-block mr-1" /> Tanggal
+            </label>
+            <input
+              id="date-picker"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+              max={today}
+            />
+          </div>
+          <Button
+            onClick={handleGenerateAlpha}
+            disabled={isGenerating || isFutureDate || stats.belumAbsen === 0}
+            className="w-full sm:w-auto"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Generate Alpha...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                Generate Alpha
+              </>
+            )}
+          </Button>
+          {isFutureDate && (
+            <Badge variant="secondary" className="text-xs">
+              <Calendar className="w-3 h-3 mr-1" />
+              Tanggal masa depan
+            </Badge>
+          )}
+          {stats.belumAbsen === 0 && !isFutureDate && (
+            <Badge variant="secondary" className="text-xs text-emerald-700 bg-emerald-50 border-emerald-200">
+              <CheckCircle className="w-3 h-3 mr-1" />
+              Semua sudah absen
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Stats Grid */}

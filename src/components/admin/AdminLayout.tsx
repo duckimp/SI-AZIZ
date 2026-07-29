@@ -11,6 +11,7 @@ import {
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import NextImage from 'next/image'
+import { Toaster } from 'sonner'
 
 interface Props {
   profile: Profile
@@ -106,6 +107,7 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
+        <Toaster position="top-right" toastOptions={{ className: 'bg-white border border-gray-200 shadow-lg' }} />
         {/* Topbar */}
         <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
