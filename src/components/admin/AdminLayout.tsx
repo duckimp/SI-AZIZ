@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
 import { Profile } from '@/lib/types'
 import {
-  LayoutDashboard, Users, BarChart3, QrCode,
+  LayoutDashboard, CalendarCheck, Users, BarChart3, QrCode,
   LogOut, Menu, X, ChevronRight, Database
 } from 'lucide-react'
 import { useState } from 'react'
@@ -21,6 +21,7 @@ interface Props {
 
 const menuItems = [
   { key: 'dashboard', label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { key: 'absensi', label: 'Manajemen Absensi', href: '/admin/absensi', icon: CalendarCheck },
   { key: 'guru', label: 'Manajemen Guru', href: '/admin/guru', icon: Users },
   { key: 'laporan', label: 'Laporan & Export', href: '/admin/laporan', icon: BarChart3 },
   { key: 'qr', label: 'Kelola QR Code', href: '/admin/qr', icon: QrCode },

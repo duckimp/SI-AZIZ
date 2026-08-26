@@ -123,6 +123,36 @@ export async function deleteGuru(id: string) {
 
 // ── MANUAL ATTENDANCE ─────────────────────────────────────────────────────────
 
+export async function getAttendanceManagementData(date: string) {
+  const admin = createAdminClient()
+
+  const [{ data: profiles }, { data: attendances }] = await Promise.all([
+    admin.from('profiles').select('id, nama, nip').eq('role', 'guru').order('nama'),
+    admin.from('attendances').select('*').eq('tanggal', date),
+  ])
+
+  const guruProfiles = profiles ?? []
+  const attendanceRows = attendances ?? []
+  const attendanceByUser = new Map(attendanceRows.map((att) => [att.user_id, att]))
+
+  const list = guruProfiles.map((profile) => ({
+    profile,
+    attendance: attendanceByUser.get(profile.id) ?? null,
+  }))
+
+  const stats = {
+    totalGuru: guruProfiles.length,
+    hadir: attendanceRows.filter((a) => a.status_kehadiran === 'Hadir').length,
+    terlambat: attendanceRows.filter((a) => a.status_kehadiran === 'Hadir' && a.status_masuk === 'Terlambat').length,
+    belumPulang: attendanceRows.filter((a) => a.status_kehadiran === 'Hadir' && a.waktu_masuk && !a.waktu_pulang).length,
+    izinSakit: attendanceRows.filter((a) => ['Izin', 'Sakit'].includes(a.status_kehadiran)).length,
+    alpha: attendanceRows.filter((a) => a.status_kehadiran === 'Alpha').length,
+    belumAbsen: Math.max(guruProfiles.length - attendanceRows.length, 0),
+  }
+
+  return { list, stats }
+}
+
 export async function inputManualAttendance(data: {
   userId: string
   tanggal: string
@@ -142,8 +172,100 @@ export async function inputManualAttendance(data: {
 
   if (error) return { success: false, error: error.message }
   revalidatePath('/admin')
+  revalidatePath('/admin/absensi')
   return { success: true }
 }
+
+export async function upsertFullAttendance(data: {
+  userId: string
+  tanggal: string
+  statusKehadiran: 'Hadir' | 'Izin' | 'Sakit' | 'Alpha'
+  waktuMasuk?: string | null
+  waktuPulang?: string | null
+  statusMasuk?: 'Tepat Waktu' | 'Terlambat'
+  keterangan?: string | null
+}) {
+  const admin = createAdminClient()
+
+  const waktuMasuk = data.waktuMasuk && data.waktuMasuk.trim() ? data.waktuMasuk.trim() : null
+  const waktuPulang = data.waktuPulang && data.waktuPulang.trim() ? data.waktuPulang.trim() : null
+
+  let statusMasuk = data.statusMasuk || 'Tepat Waktu'
+  if (data.statusKehadiran === 'Hadir' && waktuMasuk && !data.statusMasuk) {
+    const { data: settings } = await admin.from('school_settings').select('jam_masuk').eq('id', 1).single()
+    if (settings?.jam_masuk) {
+      statusMasuk = waktuMasuk > settings.jam_masuk ? 'Terlambat' : 'Tepat Waktu'
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const payload: any = {
+    user_id: data.userId,
+    tanggal: data.tanggal,
+    status_kehadiran: data.statusKehadiran,
+    waktu_masuk: data.statusKehadiran === 'Hadir' ? waktuMasuk : null,
+    waktu_pulang: data.statusKehadiran === 'Hadir' ? waktuPulang : null,
+    status_masuk: data.statusKehadiran === 'Hadir' ? statusMasuk : null,
+    keterangan: data.keterangan || null,
+  }
+
+  const { error } = await admin.from('attendances').upsert(payload, { onConflict: 'user_id,tanggal' })
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/absensi')
+  revalidatePath('/admin/laporan')
+  return { success: true }
+}
+
+export async function bulkFillWaktuPulang(tanggal: string, waktuPulang: string) {
+  const admin = createAdminClient()
+
+  const { data: missingRecords, error: fetchError } = await admin
+    .from('attendances')
+    .select('id')
+    .eq('tanggal', tanggal)
+    .eq('status_kehadiran', 'Hadir')
+    .is('waktu_pulang', null)
+
+  if (fetchError) return { success: false, error: fetchError.message }
+
+  if (!missingRecords || missingRecords.length === 0) {
+    return { success: true, count: 0, message: 'Tidak ada guru yang belum absen pulang.' }
+  }
+
+  const ids = missingRecords.map((r) => r.id)
+
+  const { error: updateError } = await admin
+    .from('attendances')
+    .update({ waktu_pulang: waktuPulang })
+    .in('id', ids)
+
+  if (updateError) return { success: false, error: updateError.message }
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/absensi')
+  revalidatePath('/admin/laporan')
+  return { success: true, count: ids.length, message: `Berhasil mengisi jam pulang untuk ${ids.length} guru.` }
+}
+
+export async function deleteAttendanceRecord(userId: string, tanggal: string) {
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('attendances')
+    .delete()
+    .eq('user_id', userId)
+    .eq('tanggal', tanggal)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/absensi')
+  revalidatePath('/admin/laporan')
+  return { success: true }
+}
+
 
 // ── LAPORAN & EXPORT ──────────────────────────────────────────────────────────
 
