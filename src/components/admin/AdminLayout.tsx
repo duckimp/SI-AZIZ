@@ -32,7 +32,7 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
@@ -43,13 +43,13 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
 
       {/* Sidebar */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-30 w-64 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static',
+        'fixed inset-y-0 left-0 z-30 w-64 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:h-screen shrink-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       )}
         style={{ background: 'linear-gradient(180deg, #022c22 0%, #064e3b 100%)' }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-6 border-b border-white/10">
+        <div className="flex items-center gap-3 px-5 py-6 border-b border-white/10 shrink-0">
           <div className="relative w-10 h-10 shrink-0 drop-shadow">
             <NextImage
               src="/logo.png"
@@ -66,7 +66,7 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = activeMenu === item.key
@@ -91,7 +91,7 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
         </nav>
 
         {/* User & Logout */}
-        <div className="px-3 py-4 border-t border-white/10">
+        <div className="px-3 py-4 border-t border-white/10 shrink-0 mt-auto">
           <div className="px-4 py-3 rounded-xl bg-white/5 mb-2">
             <p className="text-white font-semibold text-sm truncate">{profile.nama}</p>
             <p className="text-emerald-400 text-xs">Administrator</p>
@@ -107,10 +107,10 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <Toaster position="top-right" toastOptions={{ className: 'bg-white border border-gray-200 shadow-lg' }} />
         {/* Topbar */}
-        <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -136,7 +136,7 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">
+        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
           {children}
         </main>
       </div>
