@@ -98,6 +98,28 @@ export function exportAttendancePdf(
     },
     alternateRowStyles: { fillColor: [249, 250, 251] },
     margin: { left: 10, right: 10 },
+    didParseCell: (dataCell) => {
+      if (dataCell.section === 'body' && dataCell.column.index === 4) {
+        const statusVal = String(dataCell.cell.raw || '')
+        if (statusVal === 'Terlambat') {
+          dataCell.cell.styles.textColor = [220, 38, 38]
+          dataCell.cell.styles.fillColor = [254, 226, 226]
+          dataCell.cell.styles.fontStyle = 'bold'
+        } else if (statusVal === 'Izin') {
+          dataCell.cell.styles.textColor = [126, 34, 206]
+          dataCell.cell.styles.fillColor = [243, 232, 255]
+          dataCell.cell.styles.fontStyle = 'bold'
+        } else if (statusVal === 'Sakit') {
+          dataCell.cell.styles.textColor = [29, 78, 216]
+          dataCell.cell.styles.fillColor = [219, 234, 254]
+          dataCell.cell.styles.fontStyle = 'bold'
+        } else if (statusVal === 'Alpha') {
+          dataCell.cell.styles.textColor = [185, 28, 28]
+          dataCell.cell.styles.fillColor = [254, 202, 202]
+          dataCell.cell.styles.fontStyle = 'bold'
+        }
+      }
+    },
   })
 
   doc.save(`Rekap_Absensi_${startDate}_${endDate}.pdf`)

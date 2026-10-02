@@ -496,7 +496,7 @@ export default function AbsensiManagement({ initialDate, initialList, initialSta
                             {formatTime(att.waktu_masuk)}
                           </span>
                           {att.status_masuk === 'Terlambat' ? (
-                            <Badge className="ml-2 bg-amber-100 text-amber-800 border-amber-200 text-[10px]">
+                            <Badge className="ml-2 bg-red-100 text-red-800 border-red-200 text-[10px]">
                               Terlambat
                             </Badge>
                           ) : (

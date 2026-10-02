@@ -49,7 +49,7 @@ export default function AdminDashboard({ stats, attendanceList, today }: Props) 
     if (att.status_kehadiran === 'Izin') return <Badge className="bg-purple-100 text-purple-700 border-purple-200">Izin</Badge>
     if (att.status_kehadiran === 'Sakit') return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Sakit</Badge>
     if (att.status_kehadiran === 'Alpha') return <Badge className="bg-red-100 text-red-700 border-red-200">Alpha</Badge>
-    if (att.waktu_masuk && att.status_masuk === 'Terlambat') return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Terlambat</Badge>
+    if (att.waktu_masuk && att.status_masuk === 'Terlambat') return <Badge className="bg-red-100 text-red-700 border-red-200">Terlambat</Badge>
     if (att.waktu_masuk) return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Hadir ✓</Badge>
     return <Badge variant="outline">-</Badge>
   }
