@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { login } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,25 +8,37 @@ import { Label } from '@/components/ui/label'
 import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react'
 
 export default function LoginForm() {
-  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (isLoading) return
     setIsLoading(true)
     setError(null)
-    const result = await login(formData)
-    if (result?.error) {
-      setError(result.error)
+
+    const formData = new FormData(e.currentTarget)
+    try {
+      const result = await login(formData)
+      if (result?.error) {
+        setError(result.error)
+        setIsLoading(false)
+      } else if (result?.redirectTo) {
+        // Menggunakan window.location.href agar sesi auth termuat penuh dan tombol tetap loading sampai halaman tujuan terbuka
+        window.location.href = result.redirectTo
+      } else {
+        setIsLoading(false)
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan saat masuk. Silakan coba lagi.'
+      setError(msg)
       setIsLoading(false)
-    } else if (result?.redirectTo) {
-      router.push(result.redirectTo)
     }
   }
 
   return (
-    <form action={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
         <h2 className="text-xl font-bold text-emerald-900 mb-1">Selamat Datang</h2>
         <p className="text-sm text-gray-500">Masuk dengan akun yang diberikan oleh Admin.</p>
@@ -49,7 +60,8 @@ export default function LoginForm() {
           type="email"
           placeholder="contoh@gmail.com"
           required
-          className="h-12 border-emerald-200 focus:border-emerald-600 focus:ring-emerald-600/20 rounded-xl"
+          disabled={isLoading}
+          className="h-12 border-emerald-200 focus:border-emerald-600 focus:ring-emerald-600/20 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -64,12 +76,14 @@ export default function LoginForm() {
             type={showPassword ? 'text' : 'password'}
             placeholder="••••••••"
             required
-            className="h-12 border-emerald-200 focus:border-emerald-600 focus:ring-emerald-600/20 rounded-xl pr-12"
+            disabled={isLoading}
+            className="h-12 border-emerald-200 focus:border-emerald-600 focus:ring-emerald-600/20 rounded-xl pr-12 disabled:opacity-60 disabled:cursor-not-allowed"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-700 transition-colors"
+            disabled={isLoading}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-700 transition-colors disabled:opacity-50"
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
@@ -79,17 +93,17 @@ export default function LoginForm() {
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 btn-emerald text-base rounded-xl flex items-center justify-center gap-2"
+        className="w-full h-12 btn-emerald text-base rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:pointer-events-none transition-all"
       >
         {isLoading ? (
           <>
             <Loader2 size={20} className="animate-spin" />
-            Masuk...
+            <span>Memproses Masuk...</span>
           </>
         ) : (
           <>
             <LogIn size={20} />
-            Masuk
+            <span>Masuk</span>
           </>
         )}
       </Button>

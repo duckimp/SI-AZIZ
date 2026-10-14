@@ -86,7 +86,7 @@ export default function LaporanPage({ guruList }: Props) {
   }
 
   async function handleSaveKeterangan() {
-    if (!selectedRow) return
+    if (!selectedRow || isSaving) return
     setIsSaving(true)
     const result = await updateAttendanceKeterangan({
       id: selectedRow.id,
@@ -294,9 +294,9 @@ export default function LaporanPage({ guruList }: Props) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Batal</Button>
-            <Button className="btn-emerald" onClick={handleSaveKeterangan} disabled={isSaving}>
+            <Button className="btn-emerald disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none" onClick={handleSaveKeterangan} disabled={isSaving}>
               {isSaving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-              Simpan
+              {isSaving ? 'Menyimpan...' : 'Simpan'}
             </Button>
           </DialogFooter>
         </DialogContent>

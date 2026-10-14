@@ -36,6 +36,7 @@ export default function GuruManagement({ guruList: initialList }: Props) {
   // Add Guru
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (isLoading) return
     setIsLoading(true)
     const fd = new FormData(e.currentTarget)
     const result = await createGuru({
@@ -56,7 +57,7 @@ export default function GuruManagement({ guruList: initialList }: Props) {
   // Edit Guru
   async function handleEdit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!selectedGuru) return
+    if (!selectedGuru || isLoading) return
     setIsLoading(true)
     const fd = new FormData(e.currentTarget)
     const result = await updateGuru(selectedGuru.id, {
@@ -74,7 +75,7 @@ export default function GuruManagement({ guruList: initialList }: Props) {
 
   // Delete Guru
   async function handleDelete() {
-    if (!selectedGuru) return
+    if (!selectedGuru || isLoading) return
     setIsLoading(true)
     const result = await deleteGuru(selectedGuru.id)
     setIsLoading(false)
@@ -89,7 +90,7 @@ export default function GuruManagement({ guruList: initialList }: Props) {
   // Manual Attendance
   async function handleManual(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!selectedGuru) return
+    if (!selectedGuru || isLoading) return
     setIsLoading(true)
     const fd = new FormData(e.currentTarget)
     const result = await inputManualAttendance({
@@ -231,9 +232,9 @@ export default function GuruManagement({ guruList: initialList }: Props) {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>Batal</Button>
-              <Button type="submit" className="btn-emerald" disabled={isLoading}>
+              <Button type="submit" className="btn-emerald disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none" disabled={isLoading}>
                 {isLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-                Simpan
+                {isLoading ? 'Menyimpan...' : 'Simpan'}
               </Button>
             </DialogFooter>
           </form>
@@ -257,9 +258,9 @@ export default function GuruManagement({ guruList: initialList }: Props) {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>Batal</Button>
-              <Button type="submit" className="btn-emerald" disabled={isLoading}>
+              <Button type="submit" className="btn-emerald disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none" disabled={isLoading}>
                 {isLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-                Perbarui
+                {isLoading ? 'Menyimpan...' : 'Perbarui'}
               </Button>
             </DialogFooter>
           </form>
@@ -295,9 +296,9 @@ export default function GuruManagement({ guruList: initialList }: Props) {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setManualDialogOpen(false)}>Batal</Button>
-              <Button type="submit" className="btn-emerald" disabled={isLoading}>
+              <Button type="submit" className="btn-emerald disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none" disabled={isLoading}>
                 {isLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-                Simpan
+                {isLoading ? 'Menyimpan...' : 'Simpan'}
               </Button>
             </DialogFooter>
           </form>
@@ -316,9 +317,9 @@ export default function GuruManagement({ guruList: initialList }: Props) {
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Batal</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
+            <Button variant="destructive" onClick={handleDelete} disabled={isLoading} className="disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none">
               {isLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-              Ya, Hapus
+              {isLoading ? 'Menghapus...' : 'Ya, Hapus'}
             </Button>
           </DialogFooter>
         </DialogContent>

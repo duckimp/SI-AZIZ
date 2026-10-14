@@ -54,6 +54,7 @@ export default function QrManagement({ settings: initialSettings }: Props) {
   }
 
   async function handleSaveJadwal() {
+    if (isSaving) return
     setIsSaving(true)
     const result = await updateJadwalHarian(jadwal)
     if (result.success && settings) {
@@ -236,7 +237,7 @@ export default function QrManagement({ settings: initialSettings }: Props) {
                 <p className="text-xs text-gray-400 mt-0.5">Atur jam masuk & pulang untuk setiap hari. Centang Libur jika tidak ada absensi.</p>
               </div>
             </div>
-            <Button onClick={handleSaveJadwal} disabled={isSaving} className="flex items-center gap-2 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl px-4 h-10 text-sm">
+            <Button onClick={handleSaveJadwal} disabled={isSaving} className="flex items-center gap-2 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl px-4 h-10 text-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none">
               {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               {isSaving ? 'Menyimpan...' : 'Simpan'}
             </Button>

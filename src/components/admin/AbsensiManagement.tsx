@@ -126,7 +126,7 @@ export default function AbsensiManagement({ initialDate, initialList, initialSta
   // Handle Submit Edit Single Attendance
   const handleSaveAttendance = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedItem) return
+    if (!selectedItem || isSaving) return
 
     setIsSaving(true)
     try {
@@ -741,7 +741,7 @@ export default function AbsensiManagement({ initialDate, initialList, initialSta
                 <Button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none"
                 >
                   {isSaving ? (
                     <>
