@@ -7,9 +7,8 @@ function getAttendanceStatusLabel(row: Attendance): string {
   if (row.status_kehadiran === 'Izin') return 'Izin'
   if (row.status_kehadiran === 'Sakit') return 'Sakit'
   if (row.status_kehadiran === 'Alpha') return 'Alpha'
-  if (row.status_masuk === 'Terlambat') return 'Terlambat'
-  if (row.waktu_masuk) return 'Tepat Waktu'
-  return '-'
+  if (row.status_kehadiran === 'Hadir' || row.waktu_masuk) return 'Hadir'
+  return row.status_kehadiran ?? '-'
 }
 
 export function getReportPeriodLabel(startDate: string, endDate: string): string {
@@ -57,8 +56,7 @@ export function exportAttendancePdf(
   let subtitle = periodLabel
   if (statusFilter !== 'all') {
     const statusLabels: Record<string, string> = {
-      'Tepat Waktu': 'TEPAT WAKTU',
-      'Terlambat': 'TERLAMBAT',
+      'Hadir': 'HADIR',
       'Izin': 'IZIN',
       'Sakit': 'SAKIT',
       'Alpha': 'ALPHA',
@@ -133,9 +131,9 @@ export function exportAttendancePdf(
         // Style Status (kolom index 6)
         if (dataCell.column.index === 6) {
           const statusVal = String(dataCell.cell.raw || '')
-          if (statusVal === 'Terlambat') {
-            dataCell.cell.styles.textColor = [220, 38, 38]
-            dataCell.cell.styles.fillColor = [254, 226, 226]
+          if (statusVal === 'Hadir') {
+            dataCell.cell.styles.textColor = [5, 150, 105]
+            dataCell.cell.styles.fillColor = [209, 250, 229]
             dataCell.cell.styles.fontStyle = 'bold'
           } else if (statusVal === 'Izin') {
             dataCell.cell.styles.textColor = [126, 34, 206]

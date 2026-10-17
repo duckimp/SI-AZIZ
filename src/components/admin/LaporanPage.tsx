@@ -61,8 +61,7 @@ export default function LaporanPage({ guruList, settings }: Props) {
         'Detail Masuk': timeDetails.detailMasuk,
         'Pulang': row.waktu_pulang ? formatTime(row.waktu_pulang) : '-',
         'Detail Pulang': timeDetails.detailPulang,
-        'Status Masuk': row.status_masuk ?? '-',
-        'Status Kehadiran': row.status_kehadiran ?? '-',
+        'Status': getRowStatus(row),
         'Keterangan': row.keterangan ?? '-',
       }
     })
@@ -74,7 +73,7 @@ export default function LaporanPage({ guruList, settings }: Props) {
     // Set column widths
     ws['!cols'] = [
       { wch: 4 }, { wch: 12 }, { wch: 28 }, { wch: 22 },
-      { wch: 8 }, { wch: 22 }, { wch: 8 }, { wch: 26 }, { wch: 14 }, { wch: 16 }, { wch: 30 },
+      { wch: 8 }, { wch: 22 }, { wch: 8 }, { wch: 26 }, { wch: 14 }, { wch: 30 },
     ]
 
     XLSX.writeFile(wb, `Rekap_Absensi_${startDate}_${endDate}.xlsx`)
@@ -116,8 +115,7 @@ export default function LaporanPage({ guruList, settings }: Props) {
     if (row.status_kehadiran === 'Izin') return <Badge className="bg-purple-100 text-purple-700 border-purple-200">Izin</Badge>
     if (row.status_kehadiran === 'Sakit') return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Sakit</Badge>
     if (row.status_kehadiran === 'Alpha') return <Badge className="bg-red-100 text-red-700 border-red-200">Alpha</Badge>
-    if (row.status_masuk === 'Terlambat') return <Badge className="bg-red-100 text-red-700 border-red-200">Terlambat</Badge>
-    if (row.waktu_masuk) return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Tepat Waktu</Badge>
+    if (row.status_kehadiran === 'Hadir' || row.waktu_masuk) return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Hadir</Badge>
     return <Badge variant="outline">-</Badge>
   }
 
@@ -125,8 +123,7 @@ export default function LaporanPage({ guruList, settings }: Props) {
     if (row.status_kehadiran === 'Izin') return 'Izin'
     if (row.status_kehadiran === 'Sakit') return 'Sakit'
     if (row.status_kehadiran === 'Alpha') return 'Alpha'
-    if (row.status_masuk === 'Terlambat') return 'Terlambat'
-    if (row.waktu_masuk) return 'Tepat Waktu'
+    if (row.status_kehadiran === 'Hadir' || row.waktu_masuk) return 'Hadir'
     return '-'
   }
 
@@ -183,8 +180,7 @@ export default function LaporanPage({ guruList, settings }: Props) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="Tepat Waktu">Tepat Waktu</SelectItem>
-                <SelectItem value="Terlambat">Terlambat</SelectItem>
+                <SelectItem value="Hadir">Hadir</SelectItem>
                 <SelectItem value="Izin">Izin</SelectItem>
                 <SelectItem value="Sakit">Sakit</SelectItem>
                 <SelectItem value="Alpha">Alpha</SelectItem>
