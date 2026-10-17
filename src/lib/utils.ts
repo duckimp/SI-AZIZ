@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { SchoolSettings } from "@/lib/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -148,4 +149,72 @@ export function getAttendanceStatus(currentTime: string, jamMasuk: string): 'Tep
 export function timeToMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number)
   return h * 60 + m
+}
+
+export interface TimeDetails {
+  detailMasuk: string
+  detailPulang: string
+  masukStatus: 'early' | 'on_time' | 'late' | 'none'
+  pulangStatus: 'early' | 'on_time' | 'overtime' | 'none'
+}
+
+/**
+ * Calculates detail masuk and detail pulang against the school schedule.
+ */
+export function getAttendanceTimeDetails(
+  tanggal: string,
+  waktuMasuk: string | null | undefined,
+  waktuPulang: string | null | undefined,
+  settings?: SchoolSettings | null
+): TimeDetails {
+  if (!waktuMasuk && !waktuPulang) {
+    return { detailMasuk: '-', detailPulang: '-', masukStatus: 'none', pulangStatus: 'none' }
+  }
+
+  // Tentukan hari dalam seminggu ('0' - '6') dari tanggal (YYYY-MM-DD)
+  const d = new Date(tanggal + 'T00:00:00')
+  const dayKey = d.getDay().toString()
+  const jadwalHari = settings?.jadwal_harian?.[dayKey]
+
+  const targetMasukStr = jadwalHari?.masuk ? jadwalHari.masuk : (settings?.jam_masuk?.slice(0, 5) || '06:45')
+  const targetPulangStr = jadwalHari?.pulang ? jadwalHari.pulang : (settings?.jam_pulang?.slice(0, 5) || '13:15')
+
+  const targetMasukMinutes = timeToMinutes(targetMasukStr)
+  const targetPulangMinutes = timeToMinutes(targetPulangStr)
+
+  let detailMasuk = '-'
+  let masukStatus: TimeDetails['masukStatus'] = 'none'
+  if (waktuMasuk) {
+    const actualMasukMinutes = timeToMinutes(waktuMasuk.slice(0, 5))
+    const diff = actualMasukMinutes - targetMasukMinutes
+    if (diff < 0) {
+      detailMasuk = `${Math.abs(diff)} mnt lebih awal`
+      masukStatus = 'early'
+    } else if (diff === 0) {
+      detailMasuk = 'Tepat waktu'
+      masukStatus = 'on_time'
+    } else {
+      detailMasuk = `Terlambat ${diff} mnt`
+      masukStatus = 'late'
+    }
+  }
+
+  let detailPulang = '-'
+  let pulangStatus: TimeDetails['pulangStatus'] = 'none'
+  if (waktuPulang) {
+    const actualPulangMinutes = timeToMinutes(waktuPulang.slice(0, 5))
+    const diff = actualPulangMinutes - targetPulangMinutes
+    if (diff < 0) {
+      detailPulang = `Pulang ${Math.abs(diff)} mnt lebih awal`
+      pulangStatus = 'early'
+    } else if (diff === 0) {
+      detailPulang = 'Tepat waktu'
+      pulangStatus = 'on_time'
+    } else {
+      detailPulang = `+${diff} mnt dari jadwal`
+      pulangStatus = 'overtime'
+    }
+  }
+
+  return { detailMasuk, detailPulang, masukStatus, pulangStatus }
 }

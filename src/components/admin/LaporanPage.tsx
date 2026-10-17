@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Attendance, Profile } from '@/lib/types'
+import { Attendance, Profile, SchoolSettings } from '@/lib/types'
 import { getAttendanceReport, updateAttendanceKeterangan } from '@/app/actions/admin'
-import { formatTime, getTodayDate } from '@/lib/utils'
+import { formatTime, getTodayDate, getAttendanceTimeDetails } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,9 +16,10 @@ import * as XLSX from 'xlsx'
 
 interface Props {
   guruList: Profile[]
+  settings?: SchoolSettings | null
 }
 
-export default function LaporanPage({ guruList }: Props) {
+export default function LaporanPage({ guruList, settings }: Props) {
   const today = getTodayDate()
   const firstOfMonth = today.slice(0, 8) + '01'
 
@@ -49,17 +50,22 @@ export default function LaporanPage({ guruList }: Props) {
   }
 
   function handleExportExcel() {
-    const excelData = filteredData.map((row, i) => ({
-      'No': i + 1,
-      'Tanggal': row.tanggal,
-      'Nama Guru': row.profiles?.nama ?? '-',
-      'NIP': row.profiles?.nip ?? '-',
-      'Masuk': row.waktu_masuk ? formatTime(row.waktu_masuk) : '-',
-      'Pulang': row.waktu_pulang ? formatTime(row.waktu_pulang) : '-',
-      'Status Masuk': row.status_masuk ?? '-',
-      'Status Kehadiran': row.status_kehadiran ?? '-',
-      'Keterangan': row.keterangan ?? '-',
-    }))
+    const excelData = filteredData.map((row, i) => {
+      const timeDetails = getAttendanceTimeDetails(row.tanggal, row.waktu_masuk, row.waktu_pulang, settings)
+      return {
+        'No': i + 1,
+        'Tanggal': row.tanggal,
+        'Nama Guru': row.profiles?.nama ?? '-',
+        'NIP': row.profiles?.nip ?? '-',
+        'Masuk': row.waktu_masuk ? formatTime(row.waktu_masuk) : '-',
+        'Detail Masuk': timeDetails.detailMasuk,
+        'Pulang': row.waktu_pulang ? formatTime(row.waktu_pulang) : '-',
+        'Detail Pulang': timeDetails.detailPulang,
+        'Status Masuk': row.status_masuk ?? '-',
+        'Status Kehadiran': row.status_kehadiran ?? '-',
+        'Keterangan': row.keterangan ?? '-',
+      }
+    })
 
     const ws = XLSX.utils.json_to_sheet(excelData)
     const wb = XLSX.utils.book_new()
@@ -68,7 +74,7 @@ export default function LaporanPage({ guruList }: Props) {
     // Set column widths
     ws['!cols'] = [
       { wch: 4 }, { wch: 12 }, { wch: 28 }, { wch: 22 },
-      { wch: 8 }, { wch: 8 }, { wch: 14 }, { wch: 16 }, { wch: 30 },
+      { wch: 8 }, { wch: 22 }, { wch: 8 }, { wch: 26 }, { wch: 14 }, { wch: 16 }, { wch: 30 },
     ]
 
     XLSX.writeFile(wb, `Rekap_Absensi_${startDate}_${endDate}.xlsx`)
@@ -76,7 +82,7 @@ export default function LaporanPage({ guruList }: Props) {
 
   async function handleExportPdf() {
     const { exportAttendancePdf } = await import('@/lib/exportAttendancePdf')
-    exportAttendancePdf(filteredData, startDate, endDate, selectedStatus)
+    exportAttendancePdf(filteredData, startDate, endDate, selectedStatus, settings)
   }
 
   function openEditKeterangan(row: Attendance) {
@@ -229,40 +235,75 @@ export default function LaporanPage({ guruList }: Props) {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                  <th className="text-left px-6 py-3 font-semibold">Tanggal</th>
-                  <th className="text-left px-6 py-3 font-semibold">Nama Guru</th>
-                  <th className="text-left px-6 py-3 font-semibold">Masuk</th>
-                  <th className="text-left px-6 py-3 font-semibold">Pulang</th>
-                  <th className="text-left px-6 py-3 font-semibold">Status</th>
-                  <th className="text-left px-6 py-3 font-semibold">Keterangan</th>
+                  <th className="text-left px-5 py-3 font-semibold">Tanggal</th>
+                  <th className="text-left px-5 py-3 font-semibold">Nama Guru</th>
+                  <th className="text-left px-4 py-3 font-semibold">Masuk</th>
+                  <th className="text-left px-4 py-3 font-semibold">Detail Masuk</th>
+                  <th className="text-left px-4 py-3 font-semibold">Pulang</th>
+                  <th className="text-left px-4 py-3 font-semibold">Detail Pulang</th>
+                  <th className="text-left px-5 py-3 font-semibold">Status</th>
+                  <th className="text-left px-5 py-3 font-semibold">Keterangan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filteredData.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.tanggal}</td>
-                    <td className="px-6 py-3 text-sm font-semibold text-gray-900">{row.profiles?.nama ?? '-'}</td>
-                    <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.waktu_masuk ? formatTime(row.waktu_masuk) : '—'}</td>
-                    <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.waktu_pulang ? formatTime(row.waktu_pulang) : '—'}</td>
-                    <td className="px-6 py-3">{getStatusBadge(row)}</td>
-                    <td className="px-6 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500 flex-1">{row.keterangan ?? '—'}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0 text-gray-400 hover:text-emerald-600"
-                          onClick={() => openEditKeterangan(row)}
-                        >
-                          <Pencil size={14} />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredData.map((row) => {
+                  const timeDetails = getAttendanceTimeDetails(row.tanggal, row.waktu_masuk, row.waktu_pulang, settings)
+                  return (
+                    <tr key={row.id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="px-5 py-3 text-sm text-gray-700 font-mono">{row.tanggal}</td>
+                      <td className="px-5 py-3 text-sm font-semibold text-gray-900">{row.profiles?.nama ?? '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 font-mono">{row.waktu_masuk ? formatTime(row.waktu_masuk) : '—'}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {timeDetails.detailMasuk === '-' ? (
+                          <span className="text-gray-400 font-mono">—</span>
+                        ) : timeDetails.masukStatus === 'late' ? (
+                          <span className="font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md inline-block">
+                            {timeDetails.detailMasuk}
+                          </span>
+                        ) : timeDetails.masukStatus === 'early' ? (
+                          <span className="font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md inline-block">
+                            {timeDetails.detailMasuk}
+                          </span>
+                        ) : (
+                          <span className="text-gray-600">{timeDetails.detailMasuk}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700 font-mono">{row.waktu_pulang ? formatTime(row.waktu_pulang) : '—'}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {timeDetails.detailPulang === '-' ? (
+                          <span className="text-gray-400 font-mono">—</span>
+                        ) : timeDetails.pulangStatus === 'early' ? (
+                          <span className="font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md inline-block">
+                            {timeDetails.detailPulang}
+                          </span>
+                        ) : timeDetails.pulangStatus === 'overtime' ? (
+                          <span className="font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md inline-block">
+                            {timeDetails.detailPulang}
+                          </span>
+                        ) : (
+                          <span className="text-gray-600">{timeDetails.detailPulang}</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3">{getStatusBadge(row)}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500 flex-1">{row.keterangan ?? '—'}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0 text-gray-400 hover:text-emerald-600"
+                            onClick={() => openEditKeterangan(row)}
+                          >
+                            <Pencil size={14} />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
                 {filteredData.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-400 text-sm">
                       Tidak ada data untuk filter yang dipilih.
                     </td>
                   </tr>

@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { Attendance } from '@/lib/types'
-import { formatTime } from '@/lib/utils'
+import { Attendance, SchoolSettings } from '@/lib/types'
+import { formatTime, getAttendanceTimeDetails } from '@/lib/utils'
 
 function getAttendanceStatusLabel(row: Attendance): string {
   if (row.status_kehadiran === 'Izin') return 'Izin'
@@ -39,7 +39,8 @@ export function exportAttendancePdf(
   data: Attendance[],
   startDate: string,
   endDate: string,
-  statusFilter: string = 'all'
+  statusFilter: string = 'all',
+  settings?: SchoolSettings | null
 ) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -68,20 +69,25 @@ export function exportAttendancePdf(
   
   doc.text(subtitle, pageWidth / 2, 22, { align: 'center' })
 
-  const body = data.map(row => [
-    row.tanggal,
-    row.profiles?.nama ?? '-',
-    row.waktu_masuk ? formatTime(row.waktu_masuk) : '-',
-    row.waktu_pulang ? formatTime(row.waktu_pulang) : '-',
-    getAttendanceStatusLabel(row),
-    row.keterangan ?? '-',
-  ])
+  const body = data.map(row => {
+    const timeDetails = getAttendanceTimeDetails(row.tanggal, row.waktu_masuk, row.waktu_pulang, settings)
+    return [
+      row.tanggal,
+      row.profiles?.nama ?? '-',
+      row.waktu_masuk ? formatTime(row.waktu_masuk) : '-',
+      timeDetails.detailMasuk,
+      row.waktu_pulang ? formatTime(row.waktu_pulang) : '-',
+      timeDetails.detailPulang,
+      getAttendanceStatusLabel(row),
+      row.keterangan ?? '-',
+    ]
+  })
 
   autoTable(doc, {
     startY: 28,
-    head: [['Tanggal', 'Nama Guru', 'Masuk', 'Pulang', 'Status', 'Keterangan']],
+    head: [['Tanggal', 'Nama Guru', 'Masuk', 'Detail Masuk', 'Pulang', 'Detail Pulang', 'Status', 'Keterangan']],
     body,
-    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
+    styles: { fontSize: 8.5, cellPadding: 2, overflow: 'linebreak' },
     headStyles: {
       fillColor: [16, 185, 129],
       textColor: 255,
@@ -89,34 +95,61 @@ export function exportAttendancePdf(
       halign: 'center',
     },
     columnStyles: {
-      0: { cellWidth: 28 },
-      1: { cellWidth: 45 },
-      2: { cellWidth: 18, halign: 'center' },
-      3: { cellWidth: 18, halign: 'center' },
-      4: { cellWidth: 28, halign: 'center' },
-      5: { cellWidth: 'auto' },
+      0: { cellWidth: 24, halign: 'center' }, // Tanggal
+      1: { cellWidth: 44 },                   // Nama Guru
+      2: { cellWidth: 16, halign: 'center' }, // Masuk
+      3: { cellWidth: 34, halign: 'center' }, // Detail Masuk
+      4: { cellWidth: 16, halign: 'center' }, // Pulang
+      5: { cellWidth: 38, halign: 'center' }, // Detail Pulang
+      6: { cellWidth: 26, halign: 'center' }, // Status
+      7: { cellWidth: 'auto' },               // Keterangan
     },
     alternateRowStyles: { fillColor: [249, 250, 251] },
     margin: { left: 10, right: 10 },
     didParseCell: (dataCell) => {
-      if (dataCell.section === 'body' && dataCell.column.index === 4) {
-        const statusVal = String(dataCell.cell.raw || '')
-        if (statusVal === 'Terlambat') {
-          dataCell.cell.styles.textColor = [220, 38, 38]
-          dataCell.cell.styles.fillColor = [254, 226, 226]
-          dataCell.cell.styles.fontStyle = 'bold'
-        } else if (statusVal === 'Izin') {
-          dataCell.cell.styles.textColor = [126, 34, 206]
-          dataCell.cell.styles.fillColor = [243, 232, 255]
-          dataCell.cell.styles.fontStyle = 'bold'
-        } else if (statusVal === 'Sakit') {
-          dataCell.cell.styles.textColor = [29, 78, 216]
-          dataCell.cell.styles.fillColor = [219, 234, 254]
-          dataCell.cell.styles.fontStyle = 'bold'
-        } else if (statusVal === 'Alpha') {
-          dataCell.cell.styles.textColor = [185, 28, 28]
-          dataCell.cell.styles.fillColor = [254, 202, 202]
-          dataCell.cell.styles.fontStyle = 'bold'
+      if (dataCell.section === 'body') {
+        // Style Detail Masuk (kolom index 3)
+        if (dataCell.column.index === 3) {
+          const val = String(dataCell.cell.raw || '')
+          if (val.includes('Terlambat')) {
+            dataCell.cell.styles.textColor = [220, 38, 38]
+            dataCell.cell.styles.fontStyle = 'bold'
+          } else if (val.includes('lebih awal')) {
+            dataCell.cell.styles.textColor = [5, 150, 105]
+          }
+        }
+
+        // Style Detail Pulang (kolom index 5)
+        if (dataCell.column.index === 5) {
+          const val = String(dataCell.cell.raw || '')
+          if (val.includes('lebih awal')) {
+            dataCell.cell.styles.textColor = [217, 119, 6]
+            dataCell.cell.styles.fontStyle = 'bold'
+          } else if (val.includes('dari jadwal')) {
+            dataCell.cell.styles.textColor = [5, 150, 105]
+          }
+        }
+
+        // Style Status (kolom index 6)
+        if (dataCell.column.index === 6) {
+          const statusVal = String(dataCell.cell.raw || '')
+          if (statusVal === 'Terlambat') {
+            dataCell.cell.styles.textColor = [220, 38, 38]
+            dataCell.cell.styles.fillColor = [254, 226, 226]
+            dataCell.cell.styles.fontStyle = 'bold'
+          } else if (statusVal === 'Izin') {
+            dataCell.cell.styles.textColor = [126, 34, 206]
+            dataCell.cell.styles.fillColor = [243, 232, 255]
+            dataCell.cell.styles.fontStyle = 'bold'
+          } else if (statusVal === 'Sakit') {
+            dataCell.cell.styles.textColor = [29, 78, 216]
+            dataCell.cell.styles.fillColor = [219, 234, 254]
+            dataCell.cell.styles.fontStyle = 'bold'
+          } else if (statusVal === 'Alpha') {
+            dataCell.cell.styles.textColor = [185, 28, 28]
+            dataCell.cell.styles.fillColor = [254, 202, 202]
+            dataCell.cell.styles.fontStyle = 'bold'
+          }
         }
       }
     },
