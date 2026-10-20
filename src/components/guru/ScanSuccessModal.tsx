@@ -16,19 +16,15 @@ export default function ScanSuccessModal({ message, scanType, onClose }: Props) 
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-fade-in px-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in px-5">
       <div className="w-full max-w-sm animate-bounce-in">
-        <div className={`rounded-3xl p-6 text-center shadow-2xl ${
-          scanType === 'masuk'
-            ? 'bg-gradient-to-b from-emerald-700 to-emerald-900 border border-emerald-500/40'
-            : 'bg-gradient-to-b from-blue-700 to-blue-900 border border-blue-500/40'
-        }`}>
+        <div className="bg-white rounded-3xl p-6 text-center shadow-2xl border border-gray-100">
           {/* Icon */}
           <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${
-            scanType === 'masuk' ? 'bg-emerald-500/30' : 'bg-blue-500/30'
+            scanType === 'masuk' ? 'bg-emerald-50 ring-8 ring-emerald-50/60' : 'bg-blue-50 ring-8 ring-blue-50/60'
           }`}>
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
-              scanType === 'masuk' ? 'bg-emerald-400' : 'bg-blue-400'
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md ${
+              scanType === 'masuk' ? 'bg-emerald-600 text-white shadow-emerald-600/25' : 'bg-blue-600 text-white shadow-blue-600/25'
             }`}>
               {scanType === 'masuk' ? (
                 <CheckCircle2 size={32} className="text-white" />
@@ -39,16 +35,18 @@ export default function ScanSuccessModal({ message, scanType, onClose }: Props) 
           </div>
 
           {/* Content */}
-          <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">
+          <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${
+            scanType === 'masuk' ? 'text-emerald-700' : 'text-blue-700'
+          }`}>
             {scanType === 'masuk' ? 'Absen Masuk' : 'Absen Pulang'}
           </p>
-          <h2 className="text-white font-black text-2xl mb-1">Berhasil!</h2>
-          <p className="text-white/90 text-sm mb-5 leading-relaxed">{message}</p>
+          <h2 className="text-gray-900 font-black text-2xl mb-1">Berhasil!</h2>
+          <p className="text-gray-600 text-sm mb-5 leading-relaxed">{message}</p>
 
           {/* Time */}
-          <div className="flex items-center justify-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 mb-5 border border-white/10">
-            <Clock size={16} className="text-white/80" />
-            <span className="text-white font-bold tabular-nums">
+          <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5 mb-5 border border-gray-200/80">
+            <Clock size={16} className="text-gray-500" />
+            <span className="text-gray-800 font-bold tabular-nums">
               {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
@@ -56,7 +54,11 @@ export default function ScanSuccessModal({ message, scanType, onClose }: Props) 
           {/* Tombol Tutup Solid & Kontras */}
           <button
             onClick={onClose}
-            className="w-full py-3.5 px-4 bg-gold-600 hover:bg-gold-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-gold-600/30 active:scale-[0.98]"
+            className={`w-full py-3.5 px-4 text-white font-bold rounded-2xl transition-all shadow-lg active:scale-[0.98] ${
+              scanType === 'masuk'
+                ? 'bg-emerald-700 hover:bg-emerald-800 shadow-emerald-700/25'
+                : 'bg-blue-700 hover:bg-blue-800 shadow-blue-700/25'
+            }`}
           >
             Selesai & Tutup
           </button>
