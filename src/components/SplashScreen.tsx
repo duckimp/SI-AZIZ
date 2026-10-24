@@ -209,16 +209,24 @@ export default function SplashScreen() {
     <div
       id="splashScreen"
       onClick={handleDismiss}
-      className={`fixed inset-0 z-[99999] flex flex-col justify-between items-center bg-white px-5 py-8 select-none transition-all duration-500 ease-out cursor-pointer ${
+      className={`fixed inset-0 z-[99999] flex flex-col justify-between items-center bg-white px-5 py-6 select-none transition-all duration-500 ease-out cursor-pointer ${
         isHiding ? 'opacity-0 pointer-events-none scale-105' : 'opacity-100 scale-100'
       }`}
       aria-label="Splash Screen SI-AZIZ"
-      title="Ketuk layar untuk melewati"
+      title="Ketuk layar untuk melewati animasi"
     >
       <style dangerouslySetInnerHTML={{ __html: splashStyles }} />
 
+      {/* Indikator Tombol Lewati di Pojok Kanan Atas */}
+      <div className="w-full flex justify-end pt-1 pr-1">
+        <div className="flex items-center gap-1 px-3 py-1 bg-gray-100/90 text-gray-500 rounded-full text-[11px] font-semibold border border-gray-200/80 shadow-xs">
+          <span>Lewati</span>
+          <span className="text-[10px]">✕</span>
+        </div>
+      </div>
+
       {/* Bagian Tengah */}
-      <div className="flex flex-col items-center justify-center flex-grow">
+      <div className="flex flex-col items-center justify-center flex-grow -mt-4">
         <div className="animation-container">
           {/* Bubble Chat Mengetik */}
           <div className="speech-bubble">
@@ -306,6 +314,12 @@ export default function SplashScreen() {
         <div className="app-branding">
           <div className="app-title font-black">SI-AZIZ</div>
           <div className="app-subtitle">Presensi Guru & Pegawai Digital</div>
+        </div>
+
+        {/* Teks Petunjuk untuk Orang Awam */}
+        <div className="mt-6 flex items-center gap-2 bg-emerald-50/90 border border-emerald-200/90 text-emerald-800 px-4 py-1.5 rounded-full text-xs font-semibold shadow-xs animate-pulse">
+          <span className="text-sm">👆</span>
+          <span>Ketuk layar untuk lewati animasi</span>
         </div>
       </div>
 
