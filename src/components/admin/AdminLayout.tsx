@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 
-import { logout } from '@/app/actions/auth'
 import { Profile } from '@/lib/types'
 import {
   LayoutDashboard, CalendarCheck, Users, BarChart3, QrCode,

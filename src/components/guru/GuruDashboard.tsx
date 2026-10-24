@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Profile, SchoolSettings, Attendance } from '@/lib/types'
-import { logout } from '@/app/actions/auth'
 import { scanAttendance } from '@/app/actions/attendance'
 import { checkGpsRadius, playBeepSound, vibrate, formatTime } from '@/lib/utils'
 import QrScanner from './QrScanner'
