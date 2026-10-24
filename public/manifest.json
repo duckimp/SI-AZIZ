@@ -2,7 +2,7 @@
   "name": "Si-Aziz Absensi",
   "short_name": "Si-Aziz",
   "description": "Sistem Informasi Absensi Guru MI Nur Aziz",
-  "start_url": "/",
+  "start_url": "/guru",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
