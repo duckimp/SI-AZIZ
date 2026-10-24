@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/admin/AdminLayout'
 import AbsensiManagement from '@/components/admin/AbsensiManagement'
 import { getAttendanceManagementData } from '@/app/actions/admin'
+import { getTodayDate } from '@/lib/utils'
 
 export const metadata = {
   title: 'Manajemen Absensi | Si-Aziz Admin',
@@ -27,7 +28,7 @@ export default async function AdminAbsensiPage({ searchParams }: PageProps) {
 
   if (!profile || profile.role !== 'admin') redirect('/guru')
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodayDate()
   const date = searchParams?.date || today
 
   const { list, stats } = await getAttendanceManagementData(date)

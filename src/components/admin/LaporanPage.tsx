@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Attendance, Profile, SchoolSettings } from '@/lib/types'
 import { getAttendanceReport, updateAttendanceKeterangan } from '@/app/actions/admin'
-import { formatTime, getTodayDate, getAttendanceTimeDetails } from '@/lib/utils'
+import { formatTime, getTodayDate, getAttendanceTimeDetails, getAttendanceStatusLabel } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -61,7 +61,7 @@ export default function LaporanPage({ guruList, settings }: Props) {
         'Detail Masuk': timeDetails.detailMasuk,
         'Pulang': row.waktu_pulang ? formatTime(row.waktu_pulang) : '-',
         'Detail Pulang': timeDetails.detailPulang,
-        'Status': getRowStatus(row),
+        'Status': getAttendanceStatusLabel(row.status_kehadiran, row.waktu_masuk),
         'Keterangan': row.keterangan ?? '-',
       }
     })
@@ -112,25 +112,18 @@ export default function LaporanPage({ guruList, settings }: Props) {
   }
 
   const getStatusBadge = (row: Attendance) => {
-    if (row.status_kehadiran === 'Izin') return <Badge className="bg-purple-100 text-purple-700 border-purple-200">Izin</Badge>
-    if (row.status_kehadiran === 'Sakit') return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Sakit</Badge>
-    if (row.status_kehadiran === 'Alpha') return <Badge className="bg-red-100 text-red-700 border-red-200">Alpha</Badge>
-    if (row.status_kehadiran === 'Hadir' || row.waktu_masuk) return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Hadir</Badge>
+    const status = getAttendanceStatusLabel(row.status_kehadiran, row.waktu_masuk)
+    if (status === 'Izin') return <Badge className="bg-purple-100 text-purple-700 border-purple-200">Izin</Badge>
+    if (status === 'Sakit') return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Sakit</Badge>
+    if (status === 'Alpha') return <Badge className="bg-red-100 text-red-700 border-red-200">Alpha</Badge>
+    if (status === 'Hadir') return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Hadir</Badge>
     return <Badge variant="outline">-</Badge>
-  }
-
-  const getRowStatus = (row: Attendance): string => {
-    if (row.status_kehadiran === 'Izin') return 'Izin'
-    if (row.status_kehadiran === 'Sakit') return 'Sakit'
-    if (row.status_kehadiran === 'Alpha') return 'Alpha'
-    if (row.status_kehadiran === 'Hadir' || row.waktu_masuk) return 'Hadir'
-    return '-'
   }
 
   // Apply status filter to data
   const filteredData = selectedStatus === 'all' 
     ? data 
-    : data.filter(row => getRowStatus(row) === selectedStatus)
+    : data.filter(row => getAttendanceStatusLabel(row.status_kehadiran, row.waktu_masuk) === selectedStatus)
 
   return (
     <div className="space-y-6">

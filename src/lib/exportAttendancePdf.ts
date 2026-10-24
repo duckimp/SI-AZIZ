@@ -1,15 +1,9 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { Attendance, SchoolSettings } from '@/lib/types'
-import { formatTime, getAttendanceTimeDetails } from '@/lib/utils'
+import { formatTime, getAttendanceTimeDetails, getAttendanceStatusLabel } from '@/lib/utils'
 
-function getAttendanceStatusLabel(row: Attendance): string {
-  if (row.status_kehadiran === 'Izin') return 'Izin'
-  if (row.status_kehadiran === 'Sakit') return 'Sakit'
-  if (row.status_kehadiran === 'Alpha') return 'Alpha'
-  if (row.status_kehadiran === 'Hadir' || row.waktu_masuk) return 'Hadir'
-  return row.status_kehadiran ?? '-'
-}
+
 
 export function getReportPeriodLabel(startDate: string, endDate: string): string {
   const start = new Date(`${startDate}T00:00:00`)
@@ -76,7 +70,7 @@ export function exportAttendancePdf(
       timeDetails.detailMasuk,
       row.waktu_pulang ? formatTime(row.waktu_pulang) : '-',
       timeDetails.detailPulang,
-      getAttendanceStatusLabel(row),
+      getAttendanceStatusLabel(row.status_kehadiran, row.waktu_masuk),
       row.keterangan ?? '-',
     ]
   })

@@ -218,3 +218,17 @@ export function getAttendanceTimeDetails(
 
   return { detailMasuk, detailPulang, masukStatus, pulangStatus }
 }
+
+/**
+ * Resolves the primary attendance status label ('Hadir', 'Izin', 'Sakit', 'Alpha', or '-').
+ */
+export function getAttendanceStatusLabel(
+  statusKehadiran?: string | null,
+  waktuMasuk?: string | null
+): string {
+  if (statusKehadiran === 'Izin') return 'Izin'
+  if (statusKehadiran === 'Sakit') return 'Sakit'
+  if (statusKehadiran === 'Alpha') return 'Alpha'
+  if (statusKehadiran === 'Hadir' || waktuMasuk) return 'Hadir'
+  return statusKehadiran ?? '-'
+}
