@@ -6,7 +6,7 @@ import SplashScreen from "@/components/SplashScreen";
 const inter = Inter({ subsets: ["latin"] });
 
 export const viewport: Viewport = {
-  themeColor: "#064E3B",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -40,6 +40,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Si-Aziz" />
+        <meta name="theme-color" content="#ffffff" />
         {/* Unregister stale service worker to prevent chrome-extension cache errors */}
         <script
           dangerouslySetInnerHTML={{
