@@ -7,6 +7,7 @@ import { scanAttendance } from '@/app/actions/attendance'
 import { checkGpsRadius, playBeepSound, vibrate, formatTime } from '@/lib/utils'
 import QrScanner from './QrScanner'
 import ScanSuccessModal from './ScanSuccessModal'
+import LogoutModal from '@/components/LogoutModal'
 import { Badge } from '@/components/ui/badge'
 import {
   CheckCircle2, Clock, LogOut, MapPin, AlertCircle,
@@ -45,6 +46,7 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [hasNewUpdate, setHasNewUpdate] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   // Cek versi aplikasi di localStorage saat pertama kali dimuat
   useEffect(() => {
@@ -186,10 +188,10 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
                 <span className="hidden xs:inline">Update</span>
               </button>
 
-              {/* Tombol Keluar */}
+              {/* Tombol Keluar Merah Solid */}
               <button
-                onClick={() => logout()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 text-xs text-red-100 hover:text-white transition-all font-medium"
+                onClick={() => setShowLogoutModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
               >
                 <LogOut size={13} />
                 <span>Keluar</span>
@@ -446,6 +448,12 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
           onClose={() => setScanState('idle')}
         />
       )}
+
+      {/* Logout Confirmation Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+      />
     </div>
   )
 }

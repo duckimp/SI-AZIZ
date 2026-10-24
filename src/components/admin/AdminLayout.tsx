@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import NextImage from 'next/image'
 import { Toaster } from 'sonner'
+import LogoutModal from '@/components/LogoutModal'
 
 interface Props {
   profile: Profile
@@ -30,6 +31,7 @@ const menuItems = [
 
 export default function AdminLayout({ profile, activeMenu, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -97,8 +99,8 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
             <p className="text-emerald-400 text-xs">Administrator</p>
           </div>
           <button
-            onClick={() => logout()}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-300 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200"
+            onClick={() => setShowLogoutModal(true)}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-all shadow-sm active:scale-95"
           >
             <LogOut size={18} />
             <span className="font-medium text-sm">Keluar</span>
@@ -140,6 +142,7 @@ export default function AdminLayout({ profile, activeMenu, children }: Props) {
           {children}
         </main>
       </div>
+      <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
     </div>
   )
 }
