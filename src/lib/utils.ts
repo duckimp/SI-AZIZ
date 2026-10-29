@@ -41,9 +41,8 @@ function toRad(deg: number): number {
  * Parameter dipertahankan agar tidak ada perubahan di sisi pemanggil.
  */
 export async function checkGpsRadius(
-  _schoolLat: number,
-  _schoolLon: number,
-  _maxRadius: number
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  ..._args: [number, number, number]
 ): Promise<{ allowed: boolean; distance: number; error?: string }> {
   // Simulasi delay proses GPS (1.2 detik)
   await new Promise((res) => setTimeout(res, 1200))
