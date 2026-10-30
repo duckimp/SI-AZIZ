@@ -44,8 +44,8 @@ export async function checkGpsRadius(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ..._args: [number, number, number]
 ): Promise<{ allowed: boolean; distance: number; error?: string }> {
-  // Simulasi delay proses GPS (1.2 detik)
-  await new Promise((res) => setTimeout(res, 1200))
+  // Simulasi delay proses GPS (100ms)
+  await new Promise((res) => setTimeout(res, 100))
   // Jarak acak 1–15 meter agar data di database terlihat natural
   const fakeDistance = Math.floor(Math.random() * 15) + 1
   return { allowed: true, distance: fakeDistance }
