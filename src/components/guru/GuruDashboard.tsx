@@ -1,12 +1,23 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { Profile, SchoolSettings, Attendance } from '@/lib/types'
 import { scanAttendance } from '@/app/actions/attendance'
 import { checkGpsRadius, playBeepSound, vibrate, formatTime } from '@/lib/utils'
-import QrScanner from './QrScanner'
+import DigitalClock from './DigitalClock'
 import ScanSuccessModal from './ScanSuccessModal'
 import LogoutModal from '@/components/LogoutModal'
+
+const QrScanner = dynamic(() => import('./QrScanner'), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center text-white p-4">
+      <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-3" />
+      <p className="text-sm font-semibold tracking-wide">Menyiapkan Kamera...</p>
+    </div>
+  ),
+})
 import { Badge } from '@/components/ui/badge'
 import {
   CheckCircle2, Clock, LogOut, MapPin, AlertCircle,
@@ -37,9 +48,14 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
   const [scanState, setScanState] = useState<ScanState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [successData, setSuccessData] = useState<{ message: string; type: 'masuk' | 'pulang' } | null>(null)
-  const [currentTime, setCurrentTime] = useState('')
-  const currentDateRef = useRef(getJakartaDate())
   const gpsCache = useRef<{ allowed: boolean; distance: number; error?: string; ts: number } | null>(null)
+
+  // Callback saat pergantian hari di tengah malam waktu Jakarta
+  const handleDayChange = useCallback(() => {
+    setAttendance(null)
+    setScanState('idle')
+    gpsCache.current = null
+  }, [])
 
   // Update App Overlay state
   const [showUpdateModal, setShowUpdateModal] = useState(false)
@@ -74,25 +90,6 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
     // Hard reload browser untuk mengambil CSS & JS bundle terbaru
     window.location.reload()
   }
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date()
-      setCurrentTime(now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-
-      // Detect day change — reset attendance state at midnight Jakarta
-      const newDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(now)
-      if (currentDateRef.current !== newDate) {
-        currentDateRef.current = newDate
-        setAttendance(null)
-        setScanState('idle')
-        gpsCache.current = null
-      }
-    }
-    updateTime()
-    const timer = setInterval(updateTime, 1000)
-    return () => clearInterval(timer)
-  }, [])
 
   // Pre-fetch GPS as soon as scanner is opened so it's ready when QR is scanned
   const startScanner = () => {
@@ -217,16 +214,8 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
 
         {/* Main Content (Light Theme - Anti-Silau) */}
         <main className="px-5 py-6 space-y-4">
-          {/* Jam & Tanggal Raksasa Kontras Tinggi */}
-          <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-200/80">
-            <p className="text-5xl sm:text-6xl font-black text-gray-900 tabular-nums tracking-tight font-mono">
-              {currentTime || '--:--:--'}
-            </p>
-            <p className="text-emerald-800 text-sm font-bold mt-2 capitalize flex items-center justify-center gap-1.5">
-              <span>📅</span>
-              {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
+          {/* Jam & Tanggal Raksasa Kontras Tinggi (Komponen Terisolasi agar hemat CPU/RAM) */}
+          <DigitalClock onDayChange={handleDayChange} />
 
           {/* Status Cards (Absen Masuk & Pulang) */}
           <div className="grid grid-cols-2 gap-3.5">
