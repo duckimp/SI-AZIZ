@@ -180,15 +180,26 @@ export default function SplashScreen() {
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
-    // Selesai animasi (3.4 detik) langsung mulai transisi fade out
+    try {
+      // Jika sudah pernah muncul di sesi ini, langsung lewati tanpa delay
+      if (sessionStorage.getItem('siaziz_splash_shown')) {
+        setIsVisible(false)
+        return
+      }
+      sessionStorage.setItem('siaziz_splash_shown', 'true')
+    } catch {
+      // Abaikan jika browser memblokir storage
+    }
+
+    // Animasi tampil ringkas 1.4 detik (turun dari 3.4 detik)
     const hideTimer = setTimeout(() => {
       setIsHiding(true)
-    }, 3400)
+    }, 1400)
 
-    // Unmount komponen setelah fade out selesai
+    // Unmount komponen setelah transisi fade out selesai (total 1.8s)
     const removeTimer = setTimeout(() => {
       setIsVisible(false)
-    }, 3900)
+    }, 1800)
 
     return () => {
       clearTimeout(hideTimer)
@@ -197,10 +208,15 @@ export default function SplashScreen() {
   }, [])
 
   const handleDismiss = () => {
+    try {
+      sessionStorage.setItem('siaziz_splash_shown', 'true')
+    } catch {
+      // ignore
+    }
     setIsHiding(true)
     setTimeout(() => {
       setIsVisible(false)
-    }, 400)
+    }, 300)
   }
 
   if (!isVisible) return null

@@ -49,6 +49,7 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
   const [errorMsg, setErrorMsg] = useState('')
   const [successData, setSuccessData] = useState<{ message: string; type: 'masuk' | 'pulang' } | null>(null)
   const gpsCache = useRef<{ allowed: boolean; distance: number; error?: string; ts: number } | null>(null)
+  const isScanningRef = useRef(false)
 
   // Callback saat pergantian hari di tengah malam waktu Jakarta
   const handleDayChange = useCallback(() => {
@@ -112,40 +113,51 @@ export default function GuruDashboard({ profile, settings, todayAttendance }: Pr
   }
 
   const handleScan = async (qrData: string) => {
+    // Kunci proses scan: hindari trigger ganda / multi-request jika barcode terdeteksi berulang
+    if (isScanningRef.current) return
+    isScanningRef.current = true
+
     setScanState('processing')
     setErrorMsg('')
 
-    if (!settings) {
-      setErrorMsg('Pengaturan sekolah belum dikonfigurasi.')
-      setScanState('error')
-      return
-    }
+    try {
+      if (!settings) {
+        setErrorMsg('Pengaturan sekolah belum dikonfigurasi.')
+        setScanState('error')
+        return
+      }
 
-    // Use cached GPS (if fresh < 15s), otherwise fetch again
-    const GPS_CACHE_TTL = 15000
-    const gps = gpsCache.current && (Date.now() - gpsCache.current.ts) < GPS_CACHE_TTL
-      ? gpsCache.current
-      : await checkGpsRadius(settings.latitude, settings.longitude, settings.max_radius_meters)
+      // Use cached GPS (if fresh < 15s), otherwise fetch again
+      const GPS_CACHE_TTL = 15000
+      const gps = gpsCache.current && (Date.now() - gpsCache.current.ts) < GPS_CACHE_TTL
+        ? gpsCache.current
+        : await checkGpsRadius(settings.latitude, settings.longitude, settings.max_radius_meters)
 
-    gpsCache.current = { ...gps, ts: Date.now() }
+      gpsCache.current = { ...gps, ts: Date.now() }
 
-    if (!gps.allowed) {
-      setErrorMsg(gps.error ?? `Anda terlalu jauh dari sekolah (${gps.distance}m). Maksimal ${settings.max_radius_meters}m.`)
-      setScanState('error')
-      return
-    }
+      if (!gps.allowed) {
+        setErrorMsg(gps.error ?? `Anda terlalu jauh dari sekolah (${gps.distance}m). Maksimal ${settings.max_radius_meters}m.`)
+        setScanState('error')
+        return
+      }
 
-    const result = await scanAttendance(qrData, gps.distance)
+      const result = await scanAttendance(qrData, gps.distance)
 
-    if (result.success) {
-      playBeepSound()
-      vibrate([100, 50, 100])
-      setAttendance(result.attendance as Attendance)
-      setSuccessData({ message: result.message, type: result.scanType as 'masuk' | 'pulang' })
-      setScanState('success')
-    } else {
-      setErrorMsg(result.message)
-      setScanState('error')
+      if (result.success) {
+        playBeepSound()
+        vibrate([100, 50, 100])
+        setAttendance(result.attendance as Attendance)
+        setSuccessData({ message: result.message, type: result.scanType as 'masuk' | 'pulang' })
+        setScanState('success')
+      } else {
+        setErrorMsg(result.message)
+        setScanState('error')
+      }
+    } finally {
+      // Buka kunci kembali setelah jeda debounce 600ms
+      setTimeout(() => {
+        isScanningRef.current = false
+      }, 600)
     }
   }
 

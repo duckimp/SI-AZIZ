@@ -42,7 +42,14 @@ export default function QrScanner({ onScan, onClose }: Props) {
 
         await scanner.start(
           { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          {
+            fps: 10,
+            qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+              // Ukuran kotak scan responsif agar pas di segala rasio layar HP
+              const edge = Math.max(200, Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72))
+              return { width: edge, height: edge }
+            },
+          },
           async (decodedText) => {
             if (!isMounted || isStoppedRef.current) return
             await stopScanner()
